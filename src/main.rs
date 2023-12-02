@@ -17,8 +17,11 @@ struct Args {
 fn main()  -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
-    match args.exercise {
-        1 => { d01::run(args.part) }
+    match (args.exercise, args.part) {
+        (1,1) => { d01::pt1() }
+        (1,2) => { d01::pt2() }
+        (2,1) => { d02::pt1() }
+        (2,2) => { d02::pt2() }
         _ => { print!("No such exercise found: {}, pt{}", args.exercise, args.part); Ok(()) }
     }
 }

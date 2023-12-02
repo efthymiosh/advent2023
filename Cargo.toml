@@ -8,3 +8,4 @@ authors = ["efhd"]
 
 [dependencies]
 clap = { version = "4.4.10", features = ["derive"] }
+nom = "7.1.3"

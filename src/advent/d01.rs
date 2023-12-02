@@ -1,17 +1,9 @@
 use std::collections::HashMap;
 use super::util;
 
-pub fn run(pt: u8) -> Result<(), Box<dyn std::error::Error>> {
-    if pt == 1 {
-        pt1()
-    } else {
-        pt2()
-    }
-}
-
 const DATAFILE: &str = "./data/d01pt1.txt";
 
-fn pt1() -> Result<(), Box<dyn std::error::Error>> {
+pub fn pt1() -> Result<(), Box<dyn std::error::Error>> {
     let lines = util::parse_in_lines(DATAFILE)?;
     let mut numbers = Vec::new();
     for line in lines {
@@ -36,7 +28,7 @@ fn pt1() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn pt2() -> Result<(), Box<dyn std::error::Error>> {
+pub fn pt2() -> Result<(), Box<dyn std::error::Error>> {
     let lines = util::parse_in_lines(DATAFILE)?;
     let mut numbers = Vec::new();
     let numstrings: HashMap<&str, u32> = HashMap::from([
