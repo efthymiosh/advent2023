@@ -2,7 +2,6 @@ use std::collections::HashSet;
 
 use super::util;
 
-const DATAFILE: &str = "./data/d03pt1.txt";
 const MARK: char = 'm';
 const EMPTY: char = '.';
 
@@ -31,8 +30,8 @@ fn is_part(grid: &mut [&mut [char]], line: usize, mut start: usize, mut end: usi
     false
 }
 
-pub fn pt1() -> Result<(), Box<dyn std::error::Error>> {
-    let mut lines = util::parse_in_lines(DATAFILE)?.peekable();
+pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
+    let mut lines = util::parse_in_lines(&path)?.peekable();
     let mut sum = 0;
 
     let size = lines.peek().ok_or("Bad input file")?.len();
@@ -108,8 +107,8 @@ fn find_gears(grid: &mut [&mut [char]], i: usize, j: usize) -> Option<u32> {
     Some(gear)
 }
 
-pub fn pt2() -> Result<(), Box<dyn std::error::Error>> {
-    let mut lines = util::parse_in_lines(DATAFILE)?.peekable();
+pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
+    let mut lines = util::parse_in_lines(&path)?.peekable();
     let mut sum = 0;
 
     let size = lines.peek().ok_or("Bad input file")?.len();

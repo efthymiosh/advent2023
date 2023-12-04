@@ -1,10 +1,8 @@
 use std::collections::HashMap;
 use super::util;
 
-const DATAFILE: &str = "./data/d01pt1.txt";
-
-pub fn pt1() -> Result<(), Box<dyn std::error::Error>> {
-    let lines = util::parse_in_lines(DATAFILE)?;
+pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
+    let lines = util::parse_in_lines(&path)?;
     let mut numbers = Vec::new();
     for line in lines {
         let string: String = line.parse()?;
@@ -28,8 +26,8 @@ pub fn pt1() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-pub fn pt2() -> Result<(), Box<dyn std::error::Error>> {
-    let lines = util::parse_in_lines(DATAFILE)?;
+pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
+    let lines = util::parse_in_lines(&path)?;
     let mut numbers = Vec::new();
     let numstrings: HashMap<&str, u32> = HashMap::from([
         ("one",1), ("two",2), ("three",3), ("four",4), ("five",5), ("six",6), ("seven",7), ("eight",8), ("nine",9),

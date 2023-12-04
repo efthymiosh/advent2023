@@ -6,8 +6,6 @@ use nom::multi::separated_list0;
 use nom::sequence::separated_pair;
 use nom::IResult;
 
-const DATAFILE: &str = "./data/d02pt1.txt";
-
 #[derive(Debug)]
 struct Game {
     id: u32,
@@ -84,8 +82,8 @@ fn parse_color(input: &str) -> IResult<&str, Color> {
     ))
 }
 
-pub fn pt1() -> Result<(), Box<dyn std::error::Error>> {
-    let lines = util::parse_in_lines(DATAFILE)?;
+pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
+    let lines = util::parse_in_lines(&path)?;
     let bag = Sample {
         red: 12,
         green: 13,
@@ -105,8 +103,8 @@ pub fn pt1() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-pub fn pt2() -> Result<(), Box<dyn std::error::Error>> {
-    let lines = util::parse_in_lines(DATAFILE)?;
+pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
+    let lines = util::parse_in_lines(&path)?;
     let mut sum = 0;
     for line in lines {
         let mut viable = Sample {

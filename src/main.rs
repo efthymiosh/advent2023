@@ -12,18 +12,24 @@ struct Args {
     /// Part to run
     #[arg(short, long)]
     part: u8,
+
+    /// Datafile to use
+    #[arg(short, long)]
+    data: String,
 }
 
 fn main()  -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
     match (args.exercise, args.part) {
-        (1,1) => { d01::pt1() }
-        (1,2) => { d01::pt2() }
-        (2,1) => { d02::pt1() }
-        (2,2) => { d02::pt2() }
-        (3,1) => { d03::pt1() }
-        (3,2) => { d03::pt2() }
+        (1,1) => { d01::pt1(args.data) }
+        (1,2) => { d01::pt2(args.data) }
+        (2,1) => { d02::pt1(args.data) }
+        (2,2) => { d02::pt2(args.data) }
+        (3,1) => { d03::pt1(args.data) }
+        (3,2) => { d03::pt2(args.data) }
+        (4,1) => { d04::pt1(args.data) }
+        (4,2) => { d04::pt2(args.data) }
         _ => { print!("No such exercise found: {}, pt{}", args.exercise, args.part); Ok(()) }
     }
 }
