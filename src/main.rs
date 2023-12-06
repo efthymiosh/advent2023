@@ -30,6 +30,8 @@ fn main()  -> Result<(), Box<dyn std::error::Error>> {
         (3,2) => { d03::pt2(args.data) }
         (4,1) => { d04::pt1(args.data) }
         (4,2) => { d04::pt2(args.data) }
+        (5,1) => { d05::pt1(args.data) }
+        (5,2) => { d05::pt2(args.data) }
         _ => { print!("No such exercise found: {}, pt{}", args.exercise, args.part); Ok(()) }
     }
 }
