@@ -1,11 +1,7 @@
-use std::collections::{HashMap, HashSet};
-
-use super::util;
-
 use nom::bytes::complete::tag;
 use nom::character::complete::u64;
 use nom::multi::{many1, separated_list0};
-use nom::sequence::{separated_pair, tuple};
+use nom::sequence::tuple;
 use nom::IResult;
 
 fn parse<'a>(what: &str, input: &'a str) -> IResult<&'a str, Vec<u64>> {
@@ -80,7 +76,6 @@ pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
     let input: String = std::fs::read_to_string(&path)?.parse()?;
     let parsedinput: String = input.chars().filter(|&c| !(c == ' ')).collect();
     let race = parse_input_pt2(&parsedinput).unwrap();
-    let mut res = 1;
     let mut first_success = 0;
     for hold in 0..=race.time {
         let dist = (race.time - hold) * hold;
@@ -98,7 +93,7 @@ pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
             break;
         }
     }
-    res = last_success - first_success + 1;
+    let res = last_success - first_success + 1;
     println!("Mul of values: {:#?}", res);
     Ok(())
 }

@@ -29,7 +29,7 @@ impl SeedMap {
             }
         });
         // check for overlaps
-        while true {
+        loop {
             println!("--------------------------------");
             let mut new_values: Vec<(i64, (i64, i64))> = Vec::new();
             let mut v = self.maps.keys().collect::<Vec<&i64>>();
