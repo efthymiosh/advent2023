@@ -4,87 +4,57 @@ use nom::multi::separated_list0;
 use nom::sequence::separated_pair;
 use nom::IResult;
 use std::collections::HashMap;
+use std::ops::{Add, Sub};
+
+#[derive(Debug)]
+struct Range<T>
+where
+    T: Add<Output = T> + Sub<Output = T> + Default + Copy,
+{
+    start: T,
+    length: T,
+    transform: T,
+}
+
+impl<T: Add<Output = T> + Sub<Output = T> + Default + Copy + PartialOrd + PartialEq + Eq> Range<T> {
+    fn new(start: T, length: T, transform: T) -> Range<T> {
+        Range {
+            start,
+            length,
+            transform,
+        }
+    }
+    fn transform(self: &Self, n: T) -> Option<T> {
+        if n >= self.start && (n - self.start) <= self.length {
+            Some(n + self.transform)
+        } else {
+            None
+        }
+    }
+}
 
 #[derive(Debug)]
 struct SeedMap {
     next: String,
-    maps: HashMap<i64, (i64, i64)>,
+    ranges: Vec<Range<i64>>,
 }
 
 impl SeedMap {
-    fn merge(&mut self, mut other: SeedMap) {
-        println!("Merging {:#?} <--- {:#?}", self, &other);
-        self.next = other.next;
-        other.maps.drain().for_each(|(os, (oe, or))| {
-            if let Some((e, r)) = self.maps.insert(os, (oe, or)) {
-                if e == oe {
-                    self.maps.insert(os, (oe, r + or));
-                } else if e < oe {
-                    self.maps.insert(os, (e, r + or));
-                    self.maps.insert(e + 1, (oe, or));
-                } else { // e > oe
-                    self.maps.insert(os, (oe, r + or));
-                    self.maps.insert(oe + 1, (e, r));
-                }
+    fn transform(self: &Self, n: i64) -> i64 {
+        for r in &self.ranges {
+            if let Some(t) = r.transform(n) {
+                return t;
             }
-        });
-        // check for overlaps
-        loop {
-            println!("--------------------------------");
-            let mut new_values: Vec<(i64, (i64, i64))> = Vec::new();
-            let mut v = self.maps.keys().collect::<Vec<&i64>>();
-            v.sort();
-            let mut it = v.into_iter().peekable();
-            while let Some(key) = it.next() {
-                if let Some(&next) = it.peek() {
-                    let (e, r) = self.maps.get(key).unwrap();
-                    println!("Testing e {} of key {} with next {}", e, key, next);
-                    if next > e {
-                        continue;
-                    }
-                    let (ne, nr) = self.maps.get(next).unwrap();
-                    // need to split ranges
-                    new_values.push((*key, (*next - 1, *r)));
-                    if ne == e {
-                        new_values.push((*next, (*ne, *r + *nr)));
-                        println!("ne == e: inserting ({}, ({}, {}))", next, ne, r + nr);
-                    } else if ne < e {
-                        new_values.push((*next, (*ne, *r + *nr)));
-                        new_values.push((*ne + 1, (*e, *r)));
-                        println!("ne < e: inserting ({}, ({}, {}))", next, ne, r + nr);
-                        println!("ne < e: inserting ({}, ({}, {}))", ne + 1, e, r);
-                    } else if ne > e {
-                        new_values.push((*next, (*e, *r + *nr)));
-                        new_values.push((*e + 1, (*ne, *nr)));
-                        println!("ne > e: inserting ({}, ({}, {}))", next, e, r + nr);
-                        println!("ne > e: inserting ({}, ({}, {}))", e + 1, ne, nr);
-                    }
-                }
-            }
-            if new_values.len() == 0 {
-                break;
-            }
-            println!("Before {:?}", self);
-            new_values.iter().for_each(|(s, (e, r))| {self.maps.insert(*s, (*e, *r));});
-            println!("After {:?}", self);
         }
-        println!("Merged {:?}", self);
+        n
     }
+//  fn merge(&mut self, mut other: SeedMap) {}
 }
 
 fn parse_seeds(input: &str) -> IResult<&str, Vec<i64>> {
     let (rem, (_seeds, list)) =
         separated_pair(tag("seeds"), tag(": "), separated_list0(tag(" "), i64))(input)?;
     Ok((rem, list))
-}
-
-fn parse_seeds_pt2(input: &str) -> IResult<&str, Vec<(i64, i64)>> {
-    let (rem, (_seeds, list)) = separated_pair(
-        tag("seeds"),
-        tag(": "),
-        separated_list0(tag(" "), separated_pair(i64, tag(" "), i64)),
-    )(input)?;
-    Ok((rem, list.into_iter().collect()))
 }
 
 fn parse_seedmap(input: &str) -> IResult<&str, (String, SeedMap)> {
@@ -97,7 +67,9 @@ fn parse_seedmap(input: &str) -> IResult<&str, (String, SeedMap)> {
     ))(rem)?;
     let maps = v
         .into_iter()
-        .map(|((map, rs), rd)| (rs, (rs + rd, map - rs)))
+        .map(|((dest_start, source_start), range)| {
+            Range::<i64>::new(source_start, range, dest_start - source_start)
+        })
         .collect();
     Ok((
         rem,
@@ -105,7 +77,7 @@ fn parse_seedmap(input: &str) -> IResult<&str, (String, SeedMap)> {
             mapin.to_owned(),
             SeedMap {
                 next: next.to_owned(),
-                maps,
+                ranges: maps,
             },
         ),
     ))
@@ -120,23 +92,22 @@ pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
     while !remainder.is_empty() {
         let (rem, (id, seedmap)) = parse_seedmap(remainder).unwrap();
         remainder = rem;
+        println!("{} {:?}", &id, &seedmap);
         seedmaps.insert(id, seedmap);
     }
-    let seedmap = seedmaps.remove("seed").unwrap();
-    let mut applymap = seedmap;
-    while !seedmaps.is_empty() {
-        let seedmap = seedmaps.remove(&applymap.next).unwrap();
-        applymap.merge(seedmap);
-    }
+    let initmap = seedmaps.get("seed").unwrap();
     let mut min = i64::max_value();
     for seed in seeds {
         let mut val = seed;
-        for (rs, (re, diff)) in &applymap.maps {
-            if rs <= &val && re >= &val {
-                val += diff;
+        let mut seedmap = initmap;
+        loop {
+            val = seedmap.transform(val);
+            if seedmap.next == "location" {
                 break;
             }
+            seedmap = seedmaps.get(&seedmap.next).unwrap();
         }
+
         if val <= min {
             min = val;
         }
@@ -146,28 +117,6 @@ pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
-    let input: String = std::fs::read_to_string(&path)?.trim().parse()?;
-    let mut seedmaps: HashMap<String, SeedMap> = HashMap::new();
-
-    let (rem, seeds) = parse_seeds_pt2(&input).unwrap();
-    println!("seeds len {}", seeds.len());
-    let mut remainder = rem;
-    while !remainder.is_empty() {
-        let (rem, (id, seedmap)) = parse_seedmap(remainder).unwrap();
-        remainder = rem;
-        seedmaps.insert(id, seedmap);
-    }
-    let mut vl: Vec<HashMap<i64, (i64, i64)>> = Vec::new();
-    let seedmap = seedmaps.remove("seed").unwrap();
-    let mut next = seedmap.next;
-    vl.push(seedmap.maps);
-    while !seedmaps.is_empty() {
-        let seedmap = seedmaps.remove(&next).unwrap();
-        next = seedmap.next;
-        vl.push(seedmap.maps);
-    }
-    let min = i64::max_value();
-
-    println!("Min location number: {}", min);
+    let _input: String = std::fs::read_to_string(&path)?.trim().parse()?;
     Ok(())
 }
