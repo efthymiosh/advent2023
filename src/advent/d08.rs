@@ -81,7 +81,6 @@ pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
         .filter(|s| s.ends_with('A'))
         .map(|s| *s)
         .collect();
-    let mut cadences: Vec<usize> = Vec::new();
     let mut offsets_to_z: Vec<usize> = Vec::new();
     for init in &posv {
         let mut pos = *init;
