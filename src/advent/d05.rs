@@ -4,10 +4,11 @@ use nom::multi::separated_list0;
 use nom::sequence::separated_pair;
 use nom::IResult;
 use num_traits::PrimInt;
+use std::cmp::Ordering;
 use std::collections::HashMap;
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 
-use crate::advent::util;
+use crate::advent::util::pause;
 
 #[derive(Debug)]
 struct Range<T>
@@ -15,32 +16,58 @@ where
     T: PrimInt+Debug,
 {
     start: T,
-    length: T,
+    end: T,
     transform: T,
+}
+
+impl<T: PrimInt+Debug> PartialEq for Range<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.start == other.start
+    }
+}
+
+impl<T: PrimInt+Debug> Eq for Range<T> {}
+
+impl<T: PrimInt+Debug> PartialOrd for Range<T> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.start.partial_cmp(&other.start)
+    }
+}
+
+impl<T: PrimInt+Debug> Ord for Range<T> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.start.cmp(&other.start)
+    }
 }
 
 impl<T: PrimInt+Debug> Clone for Range<T> {
     fn clone(&self) -> Self {
         Range {
             start: self.start,
-            length: self.length,
+            end: self.end,
             transform: self.transform,
         }
     }
 }
 
+impl <T: PrimInt+Debug+Display> Display for Range<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "[{}, {}]({})", self.start, self.end, self.transform)
+    }
+}
+
 impl<T: PrimInt+Debug> Copy for Range<T> {}
 
-impl<T: PrimInt+Debug> Range<T> {
-    fn new(start: T, length: T, transform: T) -> Range<T> {
+impl<T: PrimInt+Debug+Display> Range<T> {
+    fn new(start: T, end: T, transform: T) -> Range<T> {
         Range {
             start,
-            length,
+            end,
             transform,
         }
     }
     fn transform(self: &Self, n: T) -> Option<T> {
-        if n >= self.start && (n - self.start) < self.length {
+        if n >= self.start && n <= self.end {
             Some(n + self.transform)
         } else {
             None
@@ -54,47 +81,48 @@ impl<T: PrimInt+Debug> Range<T> {
         if self.start <= other.start {
             split = other.start;
         } else {
-            split = other.start + other.length;
+            split = other.end;
         }
         Some((
-            Range::new(self.start, split - self.start, self.transform),
-            Range::new(split + T::one(), self.length - (split - self.start) - T::one(), self.transform),
+            Range::new(self.start, split, self.transform),
+            Range::new(split + T::one(), self.end, self.transform),
         ))
     }
+    #[inline]
     fn intersects(self: &Self, other: &Range<T>) -> bool {
-        !(self.start + self.length <= other.start || other.start + other.length <= self.start)
+        !(self.end <= other.start || other.end <= self.start)
     }
 
     fn passthrough(self: Self, other: &Range<T>) -> Vec<Range<T>> {
-        if self.start + self.length < other.start || other.start + other.length < self.start {
+        if !self.intersects(other) {
             return vec![self];
         }
         let mut v = Vec::new();
         // find intersection
         let mut intersection: Range<T> = Range {
             start: T::zero(),
-            length: T::zero(),
+            end: T::zero(),
             transform: self.transform + other.transform,
         };
         if self.start < other.start {
             intersection.start = other.start;
             v.push(Range{
                 start: self.start,
-                length: other.start - self.start,
+                end: other.start - T::one(),
                 transform: self.transform,
             });
         } else {
             intersection.start = self.start;
         }
-        if self.start + self.length <= other.start + other.length {
-            intersection.length = self.start + self.length - intersection.start;
-        } else {
-            intersection.length = other.start + other.length - intersection.start;
+        if self.end > other.end {
+            intersection.end = other.end;
             v.push(Range{
-                start: other.start + other.length,
-                length: self.start + self.length - (other.start + other.length),
-                transform: other.transform,
+                start: other.end + T::one(),
+                end: self.end,
+                transform: self.transform,
             });
+        } else {
+            intersection.end = self.end;
         }
         v.push(intersection);
         v
@@ -119,7 +147,7 @@ impl SeedMap {
 
     fn intersect_range(self: &Self, range: Range<i64>) -> Vec<Range<i64>> {
         let mut v = Vec::new();
-        let intersecting_ranges: Vec<&Range<i64>> = self.ranges.iter().filter(|r| r.intersects(&range)).collect();
+        let mut intersecting_ranges: Vec<&Range<i64>> = self.ranges.iter().filter(|r| r.intersects(&range)).collect();
         match intersecting_ranges.len() {
             0 => {v.push(range)},
             1 => {
@@ -128,10 +156,15 @@ impl SeedMap {
                 v.append(&mut vr);
             }
             _ => {
+                print!("Multiple intersecting ranges for {}: ", range);
+                intersecting_ranges.sort();
+                intersecting_ranges.iter().for_each(|e| print!("{}", e));
+                println!();
+                let mut splittable = range;
                 for r in intersecting_ranges {
-                    if let Some((r1,r2)) = range.split_against(r) {
+                    if let Some((r1,r2)) = splittable.split_against(r) {
                         v.append(&mut self.intersect_range(r1));
-                        v.append(&mut self.intersect_range(r2));
+                        splittable = r2;
                     }
                 }
             }
@@ -155,7 +188,7 @@ fn parse_seeds_pt2(input: &str) -> IResult<&str, Vec<Range<i64>>> {
     Ok((
         rem,
         list.into_iter()
-            .map(|(x, y)| Range::new(x, y, 0))
+            .map(|(x, y)| Range::new(x, x + y, 0))
             .collect(),
     ))
 }
@@ -171,7 +204,7 @@ fn parse_seedmap(input: &str) -> IResult<&str, (String, SeedMap)> {
     let maps = v
         .into_iter()
         .map(|((dest_start, source_start), range)| {
-            Range::<i64>::new(source_start, range, dest_start - source_start)
+            Range::<i64>::new(source_start, source_start + range - 1, dest_start - source_start)
         })
         .collect();
     Ok((
@@ -232,11 +265,12 @@ pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
     let mut min = Range::new(i64::max_value(), 0, 0);
     let initmap = seedmaps.get("seed").unwrap();
     for seedrange in seedranges {
+        println!("Seedrange: {}", seedrange);
         let mut vals = vec![seedrange];
         let mut seedmap = initmap;
         loop {
-            println!("Seedrange {:?}", vals);
-            println!("THROUGH {:?}", seedmap.ranges);
+            vals.iter().for_each(|e| print!("{} ", e));
+            println!();
             let mut newvals = Vec::new();
             while let Some(val) = vals.pop() {
                 let mut newval = seedmap.intersect_range(val);
@@ -256,7 +290,6 @@ pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
                 min = r;
             }
         }
-        util::pause();
     }
     println!("Min location number: {:?}", min.start + min.transform);
     Ok(())
