@@ -8,8 +8,6 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fmt::{Debug, Display};
 
-use crate::advent::util::pause;
-
 #[derive(Debug)]
 struct Range<T>
 where
@@ -73,53 +71,50 @@ impl<T: PrimInt+Debug+Display> Range<T> {
             None
         }
     }
-    fn split_at(self: Self, split: T) -> Option<(Range<T>, Range<T>)> {
-        if split < self.start && split > self.end {
-            return None;
-        }
-        Some((
-            Range::new(self.start, split, self.transform),
-            Range::new(split + T::one(), self.end, self.transform),
-        ))
-    }
     #[inline]
     fn intersects(self: &Self, other: &Range<T>) -> bool {
         !(self.end <= other.start || other.end <= self.start)
     }
 
-    fn transform_range(self: Self, other: &Range<T>) -> Vec<Range<T>> {
-        if !self.intersects(other) {
-            return vec![self];
-        }
+    fn transform_from(self: Self, other: &Range<T>) -> (Vec<Range<T>>, Vec<Range<T>>) {
         let mut v = Vec::new();
+        let mut rem = Vec::new();
+        if self.transform != T::zero() {
+            panic!("Mapping range invoked tranform_from");
+        }
+        if !self.intersects(other) {
+            return (v, vec![self]);
+        }
         // find intersection
         let mut intersection: Range<T> = Range {
             start: T::zero(),
             end: T::zero(),
-            transform: self.transform + other.transform,
+            transform: T::zero(),
         };
         if self.start < other.start {
             intersection.start = other.start;
-            v.push(Range{
+            rem.push(Range{
                 start: self.start,
                 end: other.start - T::one(),
-                transform: self.transform,
+                transform: T::zero(),
             });
         } else {
             intersection.start = self.start;
         }
         if self.end > other.end {
             intersection.end = other.end;
-            v.push(Range{
+            rem.push(Range{
                 start: other.end + T::one(),
                 end: self.end,
-                transform: self.transform,
+                transform: T::zero(),
             });
         } else {
             intersection.end = self.end;
         }
+        intersection.start = intersection.start + other.transform;
+        intersection.end = intersection.end + other.transform;
         v.push(intersection);
-        v
+        (v,rem)
     }
 }
 
@@ -141,35 +136,19 @@ impl SeedMap {
 
     fn transform_range(self: &Self, range: Range<i64>) -> Vec<Range<i64>> {
         let mut v = Vec::new();
-        let mut intersecting_ranges: Vec<&Range<i64>> = self.ranges.iter().filter(|r| r.intersects(&range)).collect();
-        match intersecting_ranges.len() {
-            0 => {v.push(range)},
-            1 => {
-                let r = intersecting_ranges[0];
-                let mut vr = range.transform_range(r);
-                v.append(&mut vr);
+        let mut rem = vec![range];
+        let intersecting_ranges: Vec<&Range<i64>> = self.ranges.iter().filter(|r| r.intersects(&range)).collect();
+        for r in &intersecting_ranges {
+            let mut newrem = Vec::new();
+            while !rem.is_empty() {
+                let tr = rem.pop().unwrap();
+                let (mut vpass, mut vrem) = tr.transform_from(r);
+                v.append(&mut vpass);
+                newrem.append(&mut vrem);
             }
-            _ => {
-                intersecting_ranges.sort();
-                let mut splittable = range;
-                for r in &intersecting_ranges {
-                    if let Some((r1,r2)) = splittable.split_at(r.end) {
-                        v.append(&mut self.transform_range(r1));
-                        splittable = r2;
-                    }
-                }
-            }
-        };
-        for r in &v {
-            if r.start == 3426060294 {
-                println!("Transforming {}", range);
-                for r in &intersecting_ranges {
-                    println!("Intersecting {}", r);
-                }
-                println!("Result       {}", r);
-                pause();
-            }
+            rem = newrem;
         }
+        v.append(&mut rem);
         v
     }
 }
@@ -202,13 +181,12 @@ fn parse_seedmap(input: &str) -> IResult<&str, (String, SeedMap)> {
         multispace1,
         separated_pair(separated_pair(i64, tag(" "), i64), tag(" "), i64),
     ))(rem)?;
-    let mut maps: Vec<Range<i64>> = v
+    let maps: Vec<Range<i64>> = v
         .into_iter()
         .map(|((dest_start, source_start), range)| {
             Range::<i64>::new(source_start, source_start + range - 1, dest_start - source_start)
         })
         .collect();
-    maps.sort();
     Ok((
         rem,
         (
@@ -267,14 +245,9 @@ pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
     let mut min = Range::new(i64::max_value(), 0, 0);
     let initmap = seedmaps.get("seed").unwrap();
     for seedrange in seedranges {
-        println!("Seedrange: {}", seedrange);
         let mut vals = vec![seedrange];
         let mut seedmap = initmap;
         loop {
-            vals.sort();
-            vals.iter().for_each(|e| println!("val {} ", e));
-            println!("-------");
-            seedmap.ranges.iter().for_each(|e| println!("map {} ", e));
             //pause();
             let mut newvals = Vec::new();
             while let Some(val) = vals.pop() {
@@ -288,15 +261,12 @@ pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
             seedmap = seedmaps.get(&seedmap.next).unwrap();
         }
 
-        vals.iter().for_each(|e| println!("fin {} ", e));
-
         for r in vals {
             if r.start + r.transform < min.start + min.transform {
                 min = r;
             }
         }
     }
-    println!("Min: {}", min);
     println!("Min location number: {}", min.start + min.transform);
     Ok(())
 }
