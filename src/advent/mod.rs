@@ -8,6 +8,7 @@ mod d06;
 mod d07;
 mod d08;
 mod d09;
+mod d10;
 
 pub fn run (exercise: u8, part: u8, file: String) -> Result<(), Box<dyn std::error::Error>> {
     match (exercise, part) {
@@ -29,6 +30,8 @@ pub fn run (exercise: u8, part: u8, file: String) -> Result<(), Box<dyn std::err
         (8,2) => { d08::pt2(file) }
         (9,1) => { d09::pt1(file) }
         (9,2) => { d09::pt2(file) }
+        (10,1) => { d10::pt1(file) }
+        (10,2) => { d10::pt2(file) }
         _ => { print!("No such exercise found: {}, pt{}", exercise, part); Ok(()) }
     }
 }
