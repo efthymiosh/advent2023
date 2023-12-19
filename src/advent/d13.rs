@@ -5,11 +5,8 @@ use nom::{
     IResult,
 };
 
-use super::util;
-
 #[derive(Debug)]
 struct Grid {
-    map: Vec<Vec<char>>,
     columns: Vec<u64>,
     rows: Vec<u64>,
 }
@@ -35,15 +32,15 @@ fn grid(input: &str) -> IResult<&str, Grid> {
                 .sum()
         })
         .collect();
-    Ok((rem, Grid { map, columns, rows }))
+    Ok((rem, Grid { columns, rows }))
 }
 
 fn parse_maps(input: &str) -> IResult<&str, Vec<Grid>> {
     separated_list1(tag("\n\n"), grid)(input)
 }
 
-fn find_horizon(vec: &Vec<u64>, smudges: u32) -> usize {
-    let mut horizon = 0;
+fn find_horizon(vec: &Vec<u64>, smudges: u32) -> Option<usize> {
+    let mut horizon = None;
     let mut griter = vec.iter().enumerate().peekable();
     while let Some((_, &num)) = griter.next() {
         if let Some((nidx, &next)) = griter.peek() {
@@ -54,7 +51,7 @@ fn find_horizon(vec: &Vec<u64>, smudges: u32) -> usize {
             let zip = vec.iter().skip(*nidx).zip(rev);
             let diff = zip.fold(0, |s, (e1, e2)| s + (e1 ^ *e2).count_ones());
             if diff == smudges {
-                horizon = *nidx;
+                horizon = Some(*nidx);
                 break;
             }
         }
@@ -71,21 +68,11 @@ pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
     }
     let mut sum = 0;
     for grid in grids {
-        util::print_gridvec(&grid.map, 3, '.');
-        println!("columns {:?}\nrows {:?}", grid.columns, grid.rows);
-        let horizon = find_horizon(&grid.columns, 0);
-        println!("Verti-rizon: {}", horizon);
-        if horizon != 0 {
+        if let Some(horizon) = find_horizon(&grid.columns, 0) {
             sum += horizon;
-            continue;
-        }
-        let horizon = find_horizon(&grid.rows, 0);
-        println!("Hori-rizon: {}", horizon);
-        if horizon != 0 {
+        } else if let Some(horizon) = find_horizon(&grid.rows, 0) {
             sum += 100 * horizon;
-            continue;
         }
-        panic!("No horizon!");
     }
     println!("Sum {}", sum);
     Ok(())
@@ -100,21 +87,11 @@ pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
     }
     let mut sum = 0;
     for grid in grids {
-        util::print_gridvec(&grid.map, 3, '.');
-        println!("columns {:?}\nrows {:?}", grid.columns, grid.rows);
-        let horizon = find_horizon(&grid.columns, 1);
-        println!("Verti-rizon: {}", horizon);
-        if horizon != 0 {
+        if let Some(horizon) = find_horizon(&grid.columns, 1) {
             sum += horizon;
-            continue;
-        }
-        let horizon = find_horizon(&grid.rows, 1);
-        println!("Hori-rizon: {}", horizon);
-        if horizon != 0 {
+        } else if let Some(horizon) = find_horizon(&grid.rows, 1) {
             sum += 100 * horizon;
-            continue;
         }
-        panic!("No horizon!");
     }
     println!("Sum {}", sum);
     Ok(())
