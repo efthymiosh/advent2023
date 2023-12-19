@@ -42,17 +42,18 @@ fn parse_maps(input: &str) -> IResult<&str, Vec<Grid>> {
     separated_list1(tag("\n\n"), grid)(input)
 }
 
-fn find_horizon(vec: &Vec<u64>) -> usize {
+fn find_horizon(vec: &Vec<u64>, smudges: u32) -> usize {
     let mut horizon = 0;
     let mut griter = vec.iter().enumerate().peekable();
     while let Some((_, &num)) = griter.next() {
         if let Some((nidx, &next)) = griter.peek() {
-            if num != next {
+            if num != next && (num ^ next).count_ones() != 1 {
                 continue;
             }
             let rev = vec.iter().take(*nidx).rev();
             let zip = vec.iter().skip(*nidx).zip(rev);
-            if zip.fold(true, |s, (e1, e2)| if s { e1 == e2 } else { false }) {
+            let diff = zip.fold(0, |s, (e1, e2)| s + (e1 ^ *e2).count_ones());
+            if diff == smudges {
                 horizon = *nidx;
                 break;
             }
@@ -72,13 +73,13 @@ pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
     for grid in grids {
         util::print_gridvec(&grid.map, 3, '.');
         println!("columns {:?}\nrows {:?}", grid.columns, grid.rows);
-        let horizon = find_horizon(&grid.columns);
+        let horizon = find_horizon(&grid.columns, 0);
         println!("Verti-rizon: {}", horizon);
         if horizon != 0 {
             sum += horizon;
             continue;
         }
-        let horizon = find_horizon(&grid.rows);
+        let horizon = find_horizon(&grid.rows, 0);
         println!("Hori-rizon: {}", horizon);
         if horizon != 0 {
             sum += 100 * horizon;
@@ -91,6 +92,30 @@ pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
-    let _input: String = std::fs::read_to_string(&path)?.trim().parse()?;
+    let input: String = std::fs::read_to_string(&path)?.trim().parse()?;
+
+    let (rem, grids) = parse_maps(&input).unwrap();
+    if !rem.is_empty() {
+        panic!("Bad input, remainder: {}", rem);
+    }
+    let mut sum = 0;
+    for grid in grids {
+        util::print_gridvec(&grid.map, 3, '.');
+        println!("columns {:?}\nrows {:?}", grid.columns, grid.rows);
+        let horizon = find_horizon(&grid.columns, 1);
+        println!("Verti-rizon: {}", horizon);
+        if horizon != 0 {
+            sum += horizon;
+            continue;
+        }
+        let horizon = find_horizon(&grid.rows, 1);
+        println!("Hori-rizon: {}", horizon);
+        if horizon != 0 {
+            sum += 100 * horizon;
+            continue;
+        }
+        panic!("No horizon!");
+    }
+    println!("Sum {}", sum);
     Ok(())
 }
