@@ -2,7 +2,7 @@ use std::fs::File;
 use std::{io, io::prelude::*};
 
 #[allow(dead_code)]
-pub fn parse_in_lines(
+pub(crate) fn parse_in_lines(
     path: &str,
 ) -> Result<Box<dyn Iterator<Item = String>>, Box<dyn std::error::Error>> {
     let input = File::open(path)?;
@@ -15,12 +15,12 @@ pub fn parse_in_lines(
 }
 
 #[allow(dead_code)]
-pub fn pause() {
+pub(crate) fn pause() {
     io::stdin().read_exact(&mut [0]).unwrap();
 }
 
 #[allow(dead_code)]
-pub fn print_grid<T>(grid: &mut [&mut [T]], spacing: usize)
+pub(crate) fn print_grid<T>(grid: &mut [&mut [T]], spacing: usize)
 where
     T: Sized + std::fmt::Display,
 {
@@ -33,7 +33,24 @@ where
 }
 
 #[allow(dead_code)]
-pub fn print_gridvec<T>(grid: &Vec<Vec<T>>, spacing: usize, dot: T)
+pub(crate) fn print_grid_pretty<T>(grid: &mut [&mut [T]], spacing: usize, empty: T)
+where
+    T: Sized + Eq + PartialEq + std::fmt::Display,
+{
+    for row in grid.iter() {
+        for item in row.iter() {
+            if *item == empty {
+                print!("{0:>1$}", '.', spacing);
+            } else {
+                print!("{0:>1$}", item, spacing);
+            }
+        }
+        println!();
+    }
+}
+
+#[allow(dead_code)]
+pub(crate) fn print_gridvec<T>(grid: &Vec<Vec<T>>, spacing: usize, dot: T)
 where
     T: Sized + Eq + PartialEq + std::fmt::Display,
 {
@@ -50,7 +67,7 @@ where
 }
 
 #[allow(dead_code)]
-pub fn gcd(u: i64, v: i64) -> i64 {
+pub(crate) fn gcd(u: i64, v: i64) -> i64 {
     // `wrapping_abs` gives a number's absolute value, unless that's 2³¹. 2³¹
     // won't fit in `i64`, so it gives -2³¹ instead.
     let mut v = v.wrapping_abs() as u64;
@@ -86,10 +103,28 @@ pub fn gcd(u: i64, v: i64) -> i64 {
 }
 
 #[allow(dead_code)]
-pub fn lcm(u: i64, v: i64) -> i64 {
+pub(crate) fn lcm(u: i64, v: i64) -> i64 {
     if u > v {
         (u / gcd(u, v)) * v
     } else {
         (v / gcd(v, u)) * u
     }
+}
+
+#[allow(dead_code)]
+pub(crate) fn get_grid_neighbors((ni, nj): (usize, usize), size: usize) -> Vec<(usize, usize)> {
+    let mut neighbors = Vec::new();
+    if ni > 0 {
+        neighbors.push((ni - 1, nj));
+    }
+    if nj > 0 {
+        neighbors.push((ni, nj - 1));
+    }
+    if ni < size - 1 {
+        neighbors.push((ni + 1, nj));
+    }
+    if nj < size - 1 {
+        neighbors.push((ni, nj + 1));
+    }
+    neighbors
 }
