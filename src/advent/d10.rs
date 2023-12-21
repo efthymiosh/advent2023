@@ -24,7 +24,7 @@ fn get_valid_neighbors(grid: &[&mut [char]], (x,y): (usize, usize)) -> Vec<(usiz
     valid_paths
 }
 
-fn discover_weights(grid: &Vec<&mut [char]>, weights: &mut Vec<&mut [u64]>, (x, y): (usize, usize), parent_weight: u64) {
+fn discover_weights(grid: &Vec<&mut [char]>, weights: &mut Vec<&mut [i64]>, (x, y): (usize, usize), parent_weight: i64) {
     if weights[x][y] <= parent_weight {
         return;
     }
@@ -60,12 +60,12 @@ fn discover_weights(grid: &Vec<&mut [char]>, weights: &mut Vec<&mut [u64]>, (x, 
     }
 }
 
-fn discover_loop(grid: &Vec<&mut [char]>, mark: &mut Vec<&mut [u64]>, vertices: &mut Vec<(u64, u64)>, (x, y): (usize, usize)) {
+fn discover_loop(grid: &Vec<&mut [char]>, mark: &mut Vec<&mut [i64]>, vertices: &mut Vec<(i64, i64)>, (x, y): (usize, usize)) {
     if mark[x][y] == 1 {
         return;
     }
     mark[x][y] = 1;
-    vertices.push((x as u64, y as u64));
+    vertices.push((x as i64, y as i64));
     match grid[x][y] {
         '|' => {
             discover_loop(grid, mark, vertices, (x, y - 1));
@@ -104,8 +104,8 @@ pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
 
     let mut grid_raw = vec![' '; size * size];
     let mut grid: Vec<&mut [char]> = grid_raw.as_mut_slice().chunks_mut(size).collect();
-    let mut weights_raw = vec![u64::max_value(); size * size];
-    let mut weights: Vec<&mut [u64]> = weights_raw.as_mut_slice().chunks_mut(size).collect();
+    let mut weights_raw = vec![i64::max_value(); size * size];
+    let mut weights: Vec<&mut [i64]> = weights_raw.as_mut_slice().chunks_mut(size).collect();
 
     let (mut startx, mut starty) = (0,0);
     for (i, line) in lines.enumerate() {
@@ -125,9 +125,9 @@ pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
     for (x,y) in v {
         discover_weights(&grid, &mut weights, (x, y), 0);
     }
-    weights_raw.iter_mut().for_each(|e| if *e == u64::max_value() { *e = 0 });
+    weights_raw.iter_mut().for_each(|e| if *e == i64::max_value() { *e = 0 });
 
-    let mut weights: Vec<&mut [u64]> = weights_raw.as_mut_slice().chunks_mut(size).collect();
+    let mut weights: Vec<&mut [i64]> = weights_raw.as_mut_slice().chunks_mut(size).collect();
     util::print_grid(weights.as_mut_slice(), 1);
     if let Some(max) = weights_raw.iter().max() {
         println!("Max value: {}", max);
@@ -144,7 +144,7 @@ pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
     let mut grid_raw = vec![' '; size * size];
     let mut grid: Vec<&mut [char]> = grid_raw.as_mut_slice().chunks_mut(size).collect();
     let mut mark_raw = vec![0; size * size];
-    let mut mark: Vec<&mut [u64]> = mark_raw.as_mut_slice().chunks_mut(size).collect();
+    let mut mark: Vec<&mut [i64]> = mark_raw.as_mut_slice().chunks_mut(size).collect();
 
     let (mut startx, mut starty) = (0,0);
     for (i, line) in lines.enumerate() {
@@ -157,8 +157,8 @@ pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
     }
     mark[startx][starty] = 1;
     let v = get_valid_neighbors(&grid, (startx, starty));
-    let mut vertices: Vec<(u64, u64)> = Vec::new();
-    vertices.push((startx as u64, starty as u64));
+    let mut vertices: Vec<(i64, i64)> = Vec::new();
+    vertices.push((startx as i64, starty as i64));
     for (x,y) in v {
         discover_loop(&grid, &mut mark, &mut vertices, (x, y));
     }

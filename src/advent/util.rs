@@ -130,7 +130,7 @@ pub(crate) fn get_grid_neighbors((ni, nj): (usize, usize), size: usize) -> Vec<(
 }
 
 #[allow(dead_code)]
-pub (crate) fn polygon_area(vertices: &[(u64, u64)]) -> f64 {
+pub (crate) fn polygon_area(vertices: &[(i64, i64)]) -> f64 {
     let n = vertices.len();
     let mut sum = 0.0;
 
@@ -143,7 +143,7 @@ pub (crate) fn polygon_area(vertices: &[(u64, u64)]) -> f64 {
 }
 
 #[allow(dead_code)]
-pub (crate) fn picks_theorem(area: f64, vertices: &[(u64, u64)]) -> u64 {
+pub (crate) fn picks_theorem(area: f64, vertices: &[(i64, i64)]) -> u64 {
     let boundary_points = vertices.len() as u64;
     let interior_points = area - (boundary_points / 2) as f64 + 1.0;
 
