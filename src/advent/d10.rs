@@ -97,25 +97,6 @@ fn discover_loop(grid: &Vec<&mut [char]>, mark: &mut Vec<&mut [u64]>, vertices: 
     }
 }
 
-fn polygon_area(vertices: &[(u64, u64)]) -> f64 {
-    let n = vertices.len();
-    let mut sum = 0.0;
-
-    for cur in 0..n {
-        let next = (cur + 1) % n;
-        sum += (vertices[cur].0 as f64 * vertices[next].1 as f64) - (vertices[next].0 as f64 * vertices[cur].1 as f64);
-    }
-
-    0.5 * sum.abs()
-}
-
-fn picks_theorem(area: f64, vertices: &[(u64, u64)]) -> u64 {
-    let boundary_points = vertices.len() as u64;
-    let interior_points = area - (boundary_points / 2) as f64 + 1.0;
-
-    interior_points as u64
-}
-
 pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
     let mut lines = util::parse_in_lines(&path)?.peekable();
 
@@ -182,9 +163,9 @@ pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
         discover_loop(&grid, &mut mark, &mut vertices, (x, y));
     }
 
-    let area = polygon_area(vertices.as_slice());
+    let area = util::polygon_area(vertices.as_slice());
     println!("Area: {}\nPolygon Count: {}", area, vertices.len());
-    let inside_tiles: u64 = picks_theorem(area, vertices.as_slice());
+    let inside_tiles: u64 = util::picks_theorem(area, vertices.as_slice());
 
     println!("Inside tiles: {:?}", inside_tiles);
 
