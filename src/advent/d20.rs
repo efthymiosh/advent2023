@@ -167,7 +167,7 @@ pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
     }
     //based on input 4 independent pules arrive on vr, which is the input of rx
     let vr = mods.get("vr").unwrap();
-    let mut cycle_map: HashMap<String, u64> = vr.inputstate.iter().map(|(e, s)| (e.clone(), 0)).collect();
+    let mut cycle_map: HashMap<String, u64> = vr.inputstate.iter().map(|(e, _)| (e.clone(), 0)).collect();
     'outer: for i in 1.. {
         let mut queue = VecDeque::new();
         queue.push_back((
