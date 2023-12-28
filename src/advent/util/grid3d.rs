@@ -96,6 +96,6 @@ pub fn visualize<T: PrimInt + Debug + Sync + Send + 'static>(grid: &Vec<Vec<Vec<
         .add_plugins(DefaultPlugins)
         .add_plugins(PanOrbitCameraPlugin)
         .insert_resource(plane)
-        .add_systems(Startup, Plane::<usize>::setup)
+        .add_systems(Startup, Plane::<T>::setup)
         .run();
 }
