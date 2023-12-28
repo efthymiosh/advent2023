@@ -102,7 +102,7 @@ pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
             grid[i][j].tile = c;
         }
     }
-    util::print_grid(&mut grid, 2);
+    util::grid::print_grid(&mut grid, 2);
     println!(
         "Total energized {}",
         energize(&mut grid, (0, 0), LightDirections::EAST)
@@ -126,7 +126,7 @@ pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
             grid[i][j].tile = c;
         }
     }
-    util::print_grid(&mut grid, 2);
+    util::grid::print_grid(&mut grid, 2);
 
     let mut max_energized = 0;
     for i in 0..size as isize {

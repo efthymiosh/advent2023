@@ -126,7 +126,7 @@ pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
             }
         }
     }
-    util::print_grid(grid, 1);
+    util::grid::print_grid(grid, 1);
     for i in 1..=size {
         for j in 1..=size {
             if grid[i][j] != MARK {

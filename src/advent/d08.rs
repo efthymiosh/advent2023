@@ -5,7 +5,7 @@ use nom::sequence::tuple;
 use nom::IResult;
 use std::collections::HashMap;
 
-use crate::advent::util::lcm;
+use crate::advent::util::math::lcm;
 
 struct Graph<'a> {
     map: HashMap<&'a str, (&'a str, &'a str)>,

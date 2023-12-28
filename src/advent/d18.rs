@@ -39,8 +39,8 @@ pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
             edges.push(state);
         }
     }
-    let area = util::polygon_area(edges.as_slice());
-    let internal = util::picks_theorem(area, edges.as_slice());
+    let area = util::math::polygon_area(edges.as_slice());
+    let internal = util::math::picks_theorem(area, edges.as_slice());
     println!("Area: {}", internal + edges.len() as u64);
     Ok(())
 }
@@ -78,8 +78,8 @@ pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
             edges.push(state);
         }
     }
-    let area = util::polygon_area(edges.as_slice());
-    let internal = util::picks_theorem(area, edges.as_slice());
+    let area = util::math::polygon_area(edges.as_slice());
+    let internal = util::math::picks_theorem(area, edges.as_slice());
     println!("Area: {}", internal + edges.len() as u64);
     Ok(())
 }

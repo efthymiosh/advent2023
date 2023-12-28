@@ -127,10 +127,10 @@ pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
             grid[i][j] = c;
         }
     }
-    util::print_grid(&mut grid, 2);
+    util::grid::print_grid(&mut grid, 2);
     slide(&mut grid, Direction::NORTH);
     println!("Afterwards:");
-    util::print_grid(&mut grid, 2);
+    util::grid::print_grid(&mut grid, 2);
     let load = calc_load(&grid);
     println!("Total load {}", load);
     Ok(())
@@ -154,7 +154,7 @@ pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    util::print_grid(&mut grid, 2);
+    util::grid::print_grid(&mut grid, 2);
     let mut hm: HashMap<String, usize> = HashMap::new();
     let mut i = 0;
     while hm.get(&hash(&grid)) == None {
@@ -164,7 +164,7 @@ pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
         slide(&mut grid, Direction::SOUTH);
         slide(&mut grid, Direction::EAST);
         i += 1;
-        util::print_grid(&mut grid, 2);
+        util::grid::print_grid(&mut grid, 2);
         println!("{} Total load {}", i, calc_load(&grid));
     }
     let prev = hm.get(&hash(&grid)).unwrap();

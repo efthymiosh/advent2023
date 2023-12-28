@@ -11,7 +11,7 @@ struct Grid {
     rows: Vec<u64>,
 }
 
-fn grid(input: &str) -> IResult<&str, Grid> {
+fn parse_grid(input: &str) -> IResult<&str, Grid> {
     let (rem, map) = separated_list1(tag("\n"), many1(one_of("#.")))(input)?;
     let rows = map
         .iter()
@@ -36,7 +36,7 @@ fn grid(input: &str) -> IResult<&str, Grid> {
 }
 
 fn parse_maps(input: &str) -> IResult<&str, Vec<Grid>> {
-    separated_list1(tag("\n\n"), grid)(input)
+    separated_list1(tag("\n\n"), parse_grid)(input)
 }
 
 fn find_horizon(vec: &Vec<u64>, smudges: u32) -> Option<usize> {

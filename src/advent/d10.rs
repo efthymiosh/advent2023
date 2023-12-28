@@ -117,7 +117,7 @@ pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    util::print_grid(grid.as_mut_slice(), 1);
+    util::grid::print_grid(grid.as_mut_slice(), 1);
 
     weights[startx][starty] = 0;
     let v = get_valid_neighbors(&grid, (startx, starty));
@@ -128,7 +128,7 @@ pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
     weights_raw.iter_mut().for_each(|e| if *e == i64::max_value() { *e = 0 });
 
     let mut weights: Vec<&mut [i64]> = weights_raw.as_mut_slice().chunks_mut(size).collect();
-    util::print_grid(weights.as_mut_slice(), 1);
+    util::grid::print_grid(weights.as_mut_slice(), 1);
     if let Some(max) = weights_raw.iter().max() {
         println!("Max value: {}", max);
     }
@@ -163,9 +163,9 @@ pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
         discover_loop(&grid, &mut mark, &mut vertices, (x, y));
     }
 
-    let area = util::polygon_area(vertices.as_slice());
+    let area = util::math::polygon_area(vertices.as_slice());
     println!("Area: {}\nPolygon Count: {}", area, vertices.len());
-    let inside_tiles: u64 = util::picks_theorem(area, vertices.as_slice());
+    let inside_tiles: u64 = util::math::picks_theorem(area, vertices.as_slice());
 
     println!("Inside tiles: {:?}", inside_tiles);
 

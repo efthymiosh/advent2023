@@ -193,7 +193,7 @@ pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
     }
     println!("{:?}", cycle_map);
     let lcm = cycle_map.values().fold(
-        *(cycle_map.values().next().unwrap()) as i64, |s, &x| util::lcm(s, x as i64));
+        *(cycle_map.values().next().unwrap()) as i64, |s, &x| util::math::lcm(s, x as i64));
     println!("Iterations to rx module: {:?}", lcm);
     Ok(())
 }

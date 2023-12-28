@@ -52,7 +52,7 @@ pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    util::print_grid(grid.as_mut_slice(), 1);
+    util::grid::print_grid(grid.as_mut_slice(), 1);
     let mut endpos = Vec::new();
     let mut hm = HashSet::new();
     take_step(&grid, 0, (startx, starty), &mut endpos, &mut hm, 64);
