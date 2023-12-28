@@ -2,6 +2,7 @@ use std::cmp::Ordering;
 use std::f32::consts::PI;
 
 use bevy::pbr::CascadeShadowConfigBuilder;
+use std::collections::{HashMap, HashSet};
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 use nom::bytes::complete::tag;
 use nom::character::complete::u32;
@@ -9,6 +10,9 @@ use nom::multi::separated_list1;
 use nom::{sequence::separated_pair, IResult};
 
 use bevy::prelude::*;
+
+#[allow(unused_imports)]
+use super::util;
 
 #[derive(Debug, PartialEq, Eq)]
 struct Block {
@@ -19,7 +23,54 @@ struct Block {
 
 #[derive(Resource)]
 struct Plane {
-    blocks: Vec<Block>,
+    grid: Vec<Vec<Vec<usize>>>,
+}
+
+fn stack_bricks<'a>(grid: &'a mut Vec<Vec<Vec<usize>>>, blocks: &mut Vec<Block>) {
+    blocks.sort_by(|a, b| {
+        let zord = a.start.2.cmp(&b.start.2);
+        if zord != Ordering::Equal {
+            return zord;
+        }
+        let yord = a.start.1.cmp(&b.start.1);
+        if yord != Ordering::Equal {
+            return yord;
+        }
+        a.start.0.cmp(&b.start.0)
+    });
+
+    for block in blocks {
+        let mut delta_empty = Vec::new();
+        let z = block.start.2;
+        for x in block.start.0..=block.end.0 {
+            for y in block.start.1..=block.end.1 {
+                let mut delta_z = 0;
+                for test_z in (0..z).rev() {
+                    if grid[x][y][test_z] != 0 {
+                        break;
+                    }
+                    delta_z = z - test_z;
+                }
+                delta_empty.push(delta_z);
+            }
+        }
+        let delta;
+        if let Some(&x) = delta_empty.iter().min() {
+            delta = x;
+        } else {
+            continue;
+        }
+        for z in block.start.2..=block.end.2 {
+            for x in block.start.0..=block.end.0 {
+                for y in block.start.1..=block.end.1 {
+                    grid[x][y][z - delta] = grid[x][y][z];
+                    grid[x][y][z] = 0;
+                }
+            }
+        }
+        block.start.2 -= delta;
+        block.end.2 -= delta;
+    }
 }
 
 fn parse_block<'a>(input: &'a str) -> IResult<&'a str, Block> {
@@ -31,7 +82,7 @@ fn parse_block<'a>(input: &'a str) -> IResult<&'a str, Block> {
     Ok((
         rem,
         Block {
-            id: rem.len(),
+            id: rem.len() + 1,
             start: (start[0] as usize, start[1] as usize, start[2] as usize),
             end: (end[0] as usize, end[1] as usize, end[2] as usize),
         },
@@ -53,19 +104,6 @@ pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
         )));
     }
 
-    blocks.sort_by(|a, b| {
-        let zord = a.start.2.cmp(&b.start.2);
-        if zord != Ordering::Equal {
-            return zord;
-        }
-        let yord = a.start.1.cmp(&b.start.1);
-        if yord != Ordering::Equal {
-            return yord;
-        }
-        a.start.0.cmp(&b.start.0)
-    });
-
-    // Create a top-side view
     let zmax = blocks
         .iter()
         .fold(0, |s, b| if b.end.2 > s { b.end.2 } else { s });
@@ -76,22 +114,66 @@ pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
         .iter()
         .fold(0, |s, b| if b.end.0 > s { b.end.0 } else { s });
 
-    let mut grid = vec![vec![vec![0, xmax]; ymax]; zmax];
+    let mut plane = Plane{ grid: vec![vec![vec![0; zmax + 2]; ymax + 1]; xmax + 1] };
 
-    for (idx, block) in blocks.iter().enumerate() {
-        for x in block.start.0..block.end.0 {
-            for y in block.start.1..block.end.1 {
-                for z in block.start.2..block.end.2 {
-                    grid[x][y][z] = idx + 1;
+    for block in &blocks {
+        for x in block.start.0..=block.end.0 {
+            for y in block.start.1..=block.end.1 {
+                for z in block.start.2..=block.end.2 {
+                    plane.grid[x][y][z] = block.id;
                 }
             }
         }
     }
 
+    stack_bricks(&mut plane.grid, &mut blocks);
+
+    // construct block deps map: id -> (amount blocks we stand on, if is empty above)
+    let mut block_stands_on: HashMap<usize, usize> = HashMap::new();
+    let mut block_is_empty_above: HashMap<usize, bool> = HashMap::new();
+
+    let mut removable = 0;
+
+    for block in &blocks {
+        let mut empty_above = true;
+        let mut stands_on: HashSet<usize> = HashSet::new();
+        for x in block.start.0..=block.end.0 {
+            for y in block.start.1..=block.end.1 {
+                let z = block.end.2;
+                if plane.grid[x][y][z+1] != 0 {
+                    empty_above = false;
+                }
+                if z > 0 && plane.grid[x][y][z-1] != 0 {
+                    stands_on.insert(plane.grid[x][y][z-1]);
+                }
+            }
+        }
+        block_is_empty_above.insert(block.id, empty_above);
+        block_stands_on.insert(block.id, stands_on.len());
+    }
+
+    for block in &blocks {
+        let mut safe = true;
+        for x in block.start.0..=block.end.0 {
+            for y in block.start.1..=block.end.1 {
+                let z = block.end.2;
+                let block_above = plane.grid[x][y][z+1];
+                if block_above != 0 && block_stands_on[&block_above] == 1 {
+                    safe = false;
+                }
+            }
+        }
+        if safe {
+            removable += 1;
+        }
+    }
+
+    println!("Removable blocks: {}", removable);
+
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(PanOrbitCameraPlugin)
-        .insert_resource(Plane { blocks })
+        .insert_resource(plane)
         .add_systems(Startup, setup)
         .run();
 
@@ -132,35 +214,33 @@ fn setup(
 
     // circular base
     commands.spawn(PbrBundle {
-        mesh: meshes.add(shape::Circle::new(1000.0).into()),
-        material: materials.add(Color::WHITE.into()),
+        mesh: meshes.add(shape::Circle::new(50.0).into()),
+        material: materials.add(Color::YELLOW_GREEN.into()),
         transform: Transform::from_rotation(Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2)),
         ..default()
     });
     // cube
-    for block in &plane.blocks {
-        println!("{:?}", block);
-        commands.spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Box::new(
-                (block.end.0 - block.start.0 + 1) as f32,
-                (block.end.2 - block.start.2 + 1) as f32,
-                (block.end.1 - block.start.1 + 1) as f32,
-            ))),
-            material: materials.add(
-                Color::rgb_u8(
-                    ((block.id * 7) % 256) as u8,
-                    ((block.id * 5) % 256) as u8,
-                    ((block.id * 3) % 256) as u8,
-                )
-                .into(),
-            ),
-            transform: Transform::from_xyz(
-                block.start.0 as f32,
-                block.start.2 as f32,
-                block.start.1 as f32,
-            ),
-            ..default()
-        });
+    for x in 0..plane.grid.len() {
+        for y in 0..plane.grid[0].len() {
+            for z in 0..plane.grid[0][0].len() {
+                if plane.grid[x][y][z] == 0 {
+                    continue;
+                }
+                commands.spawn(PbrBundle {
+                    mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+                    material: materials.add(
+                        Color::rgb_u8(
+                            ((plane.grid[x][y][z] * 7) % 256) as u8,
+                            ((plane.grid[x][y][z] * 5) % 256) as u8,
+                            ((plane.grid[x][y][z] * 3) % 256) as u8,
+                        )
+                        .into(),
+                    ),
+                    transform: Transform::from_xyz(x as f32, z as f32, y as f32),
+                    ..default()
+                });
+            }
+        }
     }
     // camera
     commands.spawn((
