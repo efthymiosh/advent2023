@@ -6,6 +6,7 @@ use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 use num_traits::PrimInt;
 use std::fmt::Debug;
 
+#[allow(dead_code)]
 #[derive(Resource)]
 struct Plane<T>
 where
@@ -14,6 +15,7 @@ where
     grid: Vec<Vec<Vec<T>>>,
 }
 
+#[allow(dead_code)]
 impl<T: PrimInt + Debug + Sync + Send + 'static> Plane<T> {
     fn setup(
         mut commands: Commands,
@@ -87,6 +89,7 @@ impl<T: PrimInt + Debug + Sync + Send + 'static> Plane<T> {
     }
 }
 
+#[allow(dead_code)]
 pub fn visualize<T: PrimInt + Debug + Sync + Send + 'static>(grid: &Vec<Vec<Vec<T>>>) {
     let plane = Plane { grid: grid.clone() };
     App::new()
