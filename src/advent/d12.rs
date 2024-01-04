@@ -17,8 +17,8 @@ struct Record {
 }
 
 impl Record {
-    fn map_permutations<'a>(map: &'a [char], counts: &[usize], countcur: usize, memo: &mut HashMap<&'a [char], u64>) -> u64 {
-        if let Some(&perms) = memo.get(map) {
+    fn map_permutations<'a>(map: &'a [char], counts: &[usize], countcur: usize, memo: &mut HashMap<(usize, usize, usize), u64>) -> u64 {
+        if let Some(&perms) = memo.get(&(map.len(), counts.len(), countcur)) {
             return perms;
         }
         if map.is_empty() {
@@ -55,22 +55,20 @@ impl Record {
                 }
                 if countcur == 0 {
                     permutations += Record::map_permutations(&map[1..], &counts, 0, memo);
-                } else {
-                    if counts[0] == countcur {
-                        permutations += Record::map_permutations(&map[1..], &counts[1..], 0, memo);
-                    }
+                } else if counts[0] == countcur {
+                    permutations += Record::map_permutations(&map[1..], &counts[1..], 0, memo);
                 }
             }
             _ => unreachable!("Received char other than expected"),
         }
+        memo.insert((map.len(), counts.len(), countcur), permutations);
         permutations
     }
 
     fn permutations(&self) -> u64 {
-        println!("Testing {} {:?}", self.map.iter().collect::<String>(), self.counts);
-        let mut hm: HashMap<&[char], u64> = HashMap::new();
+        println!("{} {:?}", self.map.iter().collect::<String>(), self.counts);
         let mut brok = self.counts.clone();
-        Record::map_permutations(&self.map[..], &mut brok[..], 0, &mut hm)
+        Record::map_permutations(&self.map[..], &mut brok[..], 0, &mut HashMap::new())
     }
 }
 
