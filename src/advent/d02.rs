@@ -2,8 +2,9 @@ use super::util;
 
 use nom::branch::alt;
 use nom::bytes::complete::tag;
+use nom::character::complete::u32;
 use nom::multi::separated_list0;
-use nom::sequence::separated_pair;
+use nom::sequence::{delimited, separated_pair};
 use nom::IResult;
 
 #[derive(Debug)]
@@ -12,7 +13,7 @@ struct Game {
     samples: Vec<Sample>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 struct Sample {
     red: u32,
     green: u32,
@@ -28,20 +29,18 @@ enum Color {
 fn parse_line(input: &str) -> Result<Game, Box<dyn std::error::Error + '_>> {
     let (remainder, game) = parse_game(input)?;
     if !remainder.is_empty() {
-        return Err(Box::new(std::io::Error::new(std::io::ErrorKind::InvalidInput, format!("Remainder remaining after parsing game: {}", remainder))))
+        return Err(Box::new(std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            format!("Remainder remaining after parsing game: {}", remainder),
+        )));
     }
     Ok(game)
 }
 
 fn parse_game(input: &str) -> IResult<&str, Game> {
-    let (remainder, (_space, id)) =
-        separated_pair(tag("Game"), tag(" "), nom::character::complete::u32)(input)?;
-    let (remainder, _) = tag(": ")(remainder)?;
+    let (remainder, id) = delimited(tag("Game "), u32, tag(": "))(input)?;
     let (remainder, samples) = separated_list0(tag("; "), parse_sample)(remainder)?;
-    Ok((remainder, Game {
-        id,
-        samples,
-    }))
+    Ok((remainder, Game { id, samples }))
 }
 
 fn parse_sample(input: &str) -> IResult<&str, Sample> {
@@ -66,11 +65,8 @@ fn parse_sample(input: &str) -> IResult<&str, Sample> {
 }
 
 fn parse_color(input: &str) -> IResult<&str, Color> {
-    let (remaining, (x, color)) = separated_pair(
-        nom::character::complete::u32,
-        tag(" "),
-        alt((tag("red"), tag("green"), tag("blue"))),
-    )(input)?;
+    let (remaining, (x, color)) =
+        separated_pair(u32, tag(" "), alt((tag("red"), tag("green"), tag("blue"))))(input)?;
     Ok((
         remaining,
         match color {
@@ -107,24 +103,11 @@ pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
     let lines = util::parse_in_lines(&path)?;
     let mut sum = 0;
     for line in lines {
-        let mut viable = Sample {
-            red: 0,
-            green: 0,
-            blue: 0,
-        };
         let game = parse_line(&line).unwrap();
-        for sample in game.samples {
-            if viable.red < sample.red {
-                viable.red = sample.red;
-            }
-            if viable.green < sample.green {
-                viable.green = sample.green;
-            }
-            if viable.blue < sample.blue {
-                viable.blue = sample.blue;
-            }
-        }
-        sum += viable.red * viable.green * viable.blue;
+        let (r, g, b) = game.samples.iter().fold((0, 0, 0), |(r, g, b), e| {
+            (r.max(e.red), g.max(e.green), b.max(e.blue))
+        });
+        sum += r * g * b;
     }
     println!("Sum of game IDs: {}", sum);
     Ok(())
