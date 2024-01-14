@@ -11,13 +11,13 @@ use super::util;
 
 #[derive(Debug, PartialEq, Clone, Copy, Eq)]
 enum Signal {
-    HIGH,
-    LOW,
+    High,
+    Low,
 }
 
 impl Display for Signal {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", if *self == Signal::LOW { "low" } else { "high" })
+        write!(f, "{}", if *self == Signal::Low { "low" } else { "high" })
     }
 }
 
@@ -34,9 +34,9 @@ impl Module {
     fn process(&mut self, from: &String, signal: Signal) -> Vec<(&String, Signal)> {
         match self.kind {
             "flipflop" => {
-                if signal == Signal::LOW {
+                if signal == Signal::Low {
                     self.on = !self.on;
-                    let send_signal = if self.on { Signal::HIGH } else { Signal::LOW };
+                    let send_signal = if self.on { Signal::High } else { Signal::Low };
                     self.outputs.iter().map(|e| (e, send_signal)).collect()
                 } else {
                     Vec::new()
@@ -45,9 +45,9 @@ impl Module {
             "broadcaster" => self.outputs.iter().map(|e| (e, signal)).collect(),
             "conjunction" => {
                 self.inputstate.insert(from.to_string(), signal);
-                let send_signal = self.inputstate.values().fold(Signal::LOW, |s, sig| {
-                    if *sig == Signal::LOW {
-                        Signal::HIGH
+                let send_signal = self.inputstate.values().fold(Signal::Low, |s, sig| {
+                    if *sig == Signal::Low {
+                        Signal::High
                     } else {
                         s
                     }
@@ -59,7 +59,7 @@ impl Module {
     }
 }
 
-fn parse_module<'a>(input: &'a str) -> IResult<&'a str, Module> {
+fn parse_module(input: &str) -> IResult<&str, Module> {
     let (rem, (modchars, modoutputstr)) = separated_pair(
         many1(none_of(" ")),
         tag(" -> "),
@@ -92,7 +92,7 @@ fn parse_module<'a>(input: &'a str) -> IResult<&'a str, Module> {
     Ok((rem, module))
 }
 
-fn parse_input<'a>(input: &'a str) -> IResult<&'a str, HashMap<String, Module>> {
+fn parse_input(input: &str) -> IResult<&str, HashMap<String, Module>> {
     let (rem, mut modules) = separated_list1(tag("\n"), parse_module)(input)?;
     let mut mods: HashMap<String, Module> = modules
         .iter()
@@ -112,7 +112,7 @@ fn parse_input<'a>(input: &'a str) -> IResult<&'a str, HashMap<String, Module>> 
     for m in mods.values_mut() {
         for out in &m.outputs {
             if let Some(cj) = cjs.get_mut(out) {
-                cj.inputstate.insert(m.name.clone(), Signal::LOW);
+                cj.inputstate.insert(m.name.clone(), Signal::Low);
             }
         }
     }
@@ -124,7 +124,7 @@ fn parse_input<'a>(input: &'a str) -> IResult<&'a str, HashMap<String, Module>> 
 }
 
 pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
-    let input: String = std::fs::read_to_string(&path)?.trim().parse()?;
+    let input: String = std::fs::read_to_string(path)?.trim().parse()?;
     let (rem, mut mods) = parse_input(&input).unwrap();
     if !rem.is_empty() {
         panic!("Remaining input");
@@ -135,13 +135,13 @@ pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
         queue.push_back((
             String::from("button"),
             String::from("broadcaster"),
-            Signal::LOW,
+            Signal::Low,
         ));
         while let Some((from, to, signal)) = queue.pop_front() {
             println!("{} -{}> {}", from, signal, to);
             match signal {
-                Signal::LOW => lowcount += 1,
-                Signal::HIGH => highcount += 1,
+                Signal::Low => lowcount += 1,
+                Signal::High => highcount += 1,
             };
             if let Some(to_mod) = mods.get_mut(&to) {
                 for (next_to, next_signal) in to_mod.process(&from, signal) {
@@ -160,24 +160,24 @@ pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
-    let input: String = std::fs::read_to_string(&path)?.trim().parse()?;
+    let input: String = std::fs::read_to_string(path)?.trim().parse()?;
     let (rem, mut mods) = parse_input(&input).unwrap();
     if !rem.is_empty() {
         panic!("Remaining input");
     }
     //based on input 4 independent pules arrive on vr, which is the input of rx
     let vr = mods.get("vr").unwrap();
-    let mut cycle_map: HashMap<String, u64> = vr.inputstate.iter().map(|(e, _)| (e.clone(), 0)).collect();
+    let mut cycle_map: HashMap<String, u64> = vr.inputstate.keys().map(|e| (e.clone(), 0)).collect();
     'outer: for i in 1.. {
         let mut queue = VecDeque::new();
         queue.push_back((
             String::from("button"),
             String::from("broadcaster"),
-            Signal::LOW,
+            Signal::Low,
         ));
         while let Some((from, to, signal)) = queue.pop_front() {
             if let Some(mo) = cycle_map.get_mut(&from) {
-                if signal == Signal::HIGH {
+                if signal == Signal::High {
                     *mo = i;
                 }
                 if cycle_map.values().fold(true, |s, e| if s { *e != 0 } else {s}) {

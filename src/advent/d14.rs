@@ -3,15 +3,15 @@ use std::collections::HashMap;
 use super::util;
 
 enum Direction {
-    NORTH,
-    SOUTH,
-    EAST,
-    WEST,
+    North,
+    South,
+    East,
+    West,
 }
 
 fn slide(grid: &mut [&mut [char]], direction: Direction) {
     match direction {
-        Direction::NORTH => {
+        Direction::North => {
             for j in 0..grid.len() {
                 for i in 0..grid.len() {
                     if grid[i][j] != '.' {
@@ -33,7 +33,7 @@ fn slide(grid: &mut [&mut [char]], direction: Direction) {
                 }
             }
         },
-        Direction::WEST => {
+        Direction::West => {
             for i in 0..grid.len() {
                 for j in 0..grid.len() {
                     if grid[i][j] != '.' {
@@ -55,7 +55,7 @@ fn slide(grid: &mut [&mut [char]], direction: Direction) {
                 }
             }
         }
-        Direction::SOUTH => {
+        Direction::South => {
             for j in (0..grid.len()).rev() {
                 for i in (0..grid.len()).rev() {
                     if grid[i][j] != '.' {
@@ -77,7 +77,7 @@ fn slide(grid: &mut [&mut [char]], direction: Direction) {
                 }
             }
         }
-        Direction::EAST => {
+        Direction::East => {
             for i in (0..grid.len()).rev() {
                 for j in (0..grid.len()).rev() {
                     if grid[i][j] != '.' {
@@ -128,7 +128,7 @@ pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
         }
     }
     util::grid::print_grid(&mut grid, 2);
-    slide(&mut grid, Direction::NORTH);
+    slide(&mut grid, Direction::North);
     println!("Afterwards:");
     util::grid::print_grid(&mut grid, 2);
     let load = calc_load(&grid);
@@ -136,7 +136,7 @@ pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn hash(v: &Vec<&mut [char]>) -> String {
+fn hash(v: &[&mut [char]]) -> String {
     v.iter().map(|e| e.iter().collect::<String>()).collect()
 }
 
@@ -157,12 +157,12 @@ pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
     util::grid::print_grid(&mut grid, 2);
     let mut hm: HashMap<String, usize> = HashMap::new();
     let mut i = 0;
-    while hm.get(&hash(&grid)) == None {
+    while hm.get(&hash(&grid)).is_none() {
         hm.insert(hash(&grid), i);
-        slide(&mut grid, Direction::NORTH);
-        slide(&mut grid, Direction::WEST);
-        slide(&mut grid, Direction::SOUTH);
-        slide(&mut grid, Direction::EAST);
+        slide(&mut grid, Direction::North);
+        slide(&mut grid, Direction::West);
+        slide(&mut grid, Direction::South);
+        slide(&mut grid, Direction::East);
         i += 1;
         util::grid::print_grid(&mut grid, 2);
         println!("{} Total load {}", i, calc_load(&grid));
@@ -170,10 +170,10 @@ pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
     let prev = hm.get(&hash(&grid)).unwrap();
     let moves = (1_000_000_000 - i) % (i - prev);
     for _ in 0..moves {
-        slide(&mut grid, Direction::NORTH);
-        slide(&mut grid, Direction::WEST);
-        slide(&mut grid, Direction::SOUTH);
-        slide(&mut grid, Direction::EAST);
+        slide(&mut grid, Direction::North);
+        slide(&mut grid, Direction::West);
+        slide(&mut grid, Direction::South);
+        slide(&mut grid, Direction::East);
     }
     println!("Total load {}", calc_load(&grid));
     Ok(())

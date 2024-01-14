@@ -90,8 +90,8 @@ impl<T: PrimInt + Debug + Sync + Send + 'static> Plane<T> {
 }
 
 #[allow(dead_code)]
-pub fn visualize<T: PrimInt + Debug + Sync + Send + 'static>(grid: &Vec<Vec<Vec<T>>>) {
-    let plane = Plane { grid: grid.clone() };
+pub fn visualize<T: PrimInt + Debug + Sync + Send + 'static>(grid: &[Vec<Vec<T>>]) {
+    let plane = Plane { grid: grid.to_owned() };
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(PanOrbitCameraPlugin)

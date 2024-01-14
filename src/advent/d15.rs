@@ -11,7 +11,7 @@ fn parse_input(input: &str) -> IResult<&str, Vec<String>> {
 }
 
 pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
-    let input: String = std::fs::read_to_string(&path)?.trim().parse()?;
+    let input: String = std::fs::read_to_string(path)?.trim().parse()?;
 
     let (_, sequences) = parse_input(&input).unwrap();
 
@@ -51,7 +51,7 @@ fn parse_input_pt2(input: &str) -> IResult<&str, Vec<Instr>> {
 }
 
 pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
-    let input: String = std::fs::read_to_string(&path)?.trim().parse()?;
+    let input: String = std::fs::read_to_string(path)?.trim().parse()?;
 
     let (_, sequences) = parse_input_pt2(&input).unwrap();
 

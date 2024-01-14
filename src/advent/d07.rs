@@ -26,7 +26,7 @@ impl Hand {
         let mut hm: HashMap<u32, u32> = HashMap::new();
         for x in &hand {
             let mut v = 0;
-            if let Some(vin) = hm.remove(&x) {
+            if let Some(vin) = hm.remove(x) {
                 v = vin;
             }
             hm.insert(*x, v + 1);
@@ -89,11 +89,8 @@ impl Hand {
                 |s, (a, b)| {
                     if s != Ordering::Equal {
                         return s;
-                    } else if a == b {
-                        Ordering::Equal
-                    } else {
-                        a.cmp(b)
                     }
+                    a.cmp(b)
                 },
             )
         }
@@ -102,31 +99,25 @@ impl Hand {
 
 impl PartialOrd for Hand {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        if self.class > other.class {
-            Some(Ordering::Greater)
-        } else if self.class < other.class {
-            Some(Ordering::Less)
-        } else {
-            self.hand.iter().zip(other.hand.iter()).fold(
-                Some(Ordering::Equal),
-                |s, (a,b)| {
-                    if s != Some(Ordering::Equal) {
-                        return s;
-                    }
-                    if a == b {
-                        Some(Ordering::Equal)
-                    } else {
-                        a.partial_cmp(b)
-                    }
-                },
-            )
-        }
+        Some(self.cmp(other))
     }
 }
 
 impl Ord for Hand {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.partial_cmp(other).unwrap()
+        let class_cmp = self.class.cmp(&other.class);
+        if class_cmp != Ordering::Equal {
+            return class_cmp
+        }
+        self.hand.iter().zip(other.hand.iter()).fold(
+            Ordering::Equal,
+            |s, (a,b)| {
+                if s != Ordering::Equal {
+                    return s;
+                }
+                a.cmp(b)
+            },
+        )
     }
 }
 
@@ -155,12 +146,12 @@ fn parse_hand(input: &str, joker: bool) -> IResult<&str, Hand> {
 fn parse(input: &str, joker: bool) -> Result<Hand, Box<dyn std::error::Error + '_>> {
     let (remainder, hand) = parse_hand(input, joker)?;
     if !remainder.is_empty() {
-        return Err(Box::new(std::io::Error::new(
+        Err(Box::new(std::io::Error::new(
             std::io::ErrorKind::InvalidInput,
             format!("Remainder remaining after parsing game: {}", remainder),
-        )));
+        )))
     } else {
-        return Ok(hand);
+        Ok(hand)
     }
 }
 

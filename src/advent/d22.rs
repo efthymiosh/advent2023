@@ -15,7 +15,7 @@ struct Block {
     end: (usize, usize, usize),
 }
 
-fn stack_bricks<'a>(grid: &'a mut Vec<Vec<Vec<usize>>>, blocks: &mut Vec<Block>) {
+fn stack_bricks(grid: &mut [Vec<Vec<usize>>], blocks: &mut Vec<Block>) {
     blocks.sort_by(|a, b| {
         let zord = a.start.2.cmp(&b.start.2);
         if zord != Ordering::Equal {
@@ -62,7 +62,7 @@ fn stack_bricks<'a>(grid: &'a mut Vec<Vec<Vec<usize>>>, blocks: &mut Vec<Block>)
     }
 }
 
-fn parse_block<'a>(input: &'a str) -> IResult<&'a str, Block> {
+fn parse_block(input: &str) -> IResult<&str, Block> {
     let (rem, (start, end)) = separated_pair(
         separated_list1(tag(","), u32),
         tag("~"),
@@ -78,12 +78,12 @@ fn parse_block<'a>(input: &'a str) -> IResult<&'a str, Block> {
     ))
 }
 
-fn parse_input<'a>(input: &'a str) -> IResult<&'a str, Vec<Block>> {
+fn parse_input(input: &str) -> IResult<&str, Vec<Block>> {
     separated_list1(tag("\n"), parse_block)(input)
 }
 
 pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
-    let input: String = std::fs::read_to_string(&path)?.trim().parse()?;
+    let input: String = std::fs::read_to_string(path)?.trim().parse()?;
 
     let (rem, mut blocks) = parse_input(&input).unwrap();
     if !rem.is_empty() {
@@ -155,7 +155,7 @@ pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
-    let input: String = std::fs::read_to_string(&path)?.trim().parse()?;
+    let input: String = std::fs::read_to_string(path)?.trim().parse()?;
 
     let (rem, mut blocks) = parse_input(&input).unwrap();
     if !rem.is_empty() {
@@ -208,7 +208,7 @@ pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
     for block in &blocks {
         let blockdeps = block_stands_on.get(&block.id).unwrap();
         for dep in blockdeps {
-            if let Some(hs) = block_stands_below.get_mut(&dep) {
+            if let Some(hs) = block_stands_below.get_mut(dep) {
                 hs.insert(block.id);
             } else {
                 let mut hs = HashSet::new();

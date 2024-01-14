@@ -46,7 +46,7 @@ fn parse_var(input: &str) -> IResult<&str, Var> {
     }
 }
 
-fn parse_rule<'a>(input: &'a str) -> IResult<&'a str, Rule> {
+fn parse_rule(input: &str) -> IResult<&str, Rule> {
     let mut i = input;
     let mut condition = None;
     if let Ok((rem, (var, op, target, _))) = tuple((parse_var, parse_op, i64, tag(":")))(i) {
@@ -57,7 +57,7 @@ fn parse_rule<'a>(input: &'a str) -> IResult<&'a str, Rule> {
     Ok((rem, Rule { condition, target }))
 }
 
-fn parse_workflow<'a>(input: &'a str) -> IResult<&'a str, (&'a str, Vec<Rule>)> {
+fn parse_workflow(input: &str) -> IResult<&str, (&str, Vec<Rule>)> {
     let (remainder, (name, v)) = tuple((
         alpha1,
         delimited(tag("{"), separated_list1(tag(","), parse_rule), tag("}")),
@@ -65,7 +65,7 @@ fn parse_workflow<'a>(input: &'a str) -> IResult<&'a str, (&'a str, Vec<Rule>)> 
     Ok((remainder, (name, v)))
 }
 
-fn parse_workflows<'a>(input: &'a str) -> IResult<&'a str, HashMap<&'a str, Vec<Rule>>> {
+fn parse_workflows(input: &str) -> IResult<&str, HashMap<&str, Vec<Rule>>> {
     let (rem, v) = separated_list1(tag("\n"), parse_workflow)(input)?;
     let (rem, _) = tag("\n\n")(rem)?;
     Ok((rem, v.into_iter().collect()))
@@ -79,7 +79,7 @@ struct Part {
     s: i64,
 }
 
-fn parse_parts<'a>(input: &'a str) -> IResult<&'a str, Vec<Part>> {
+fn parse_parts(input: &str) -> IResult<&str, Vec<Part>> {
     let (rem, v) = separated_list1(
         tag("\n"),
         tuple((
@@ -122,16 +122,16 @@ fn apply_workflow(workflows: &HashMap<&str, Vec<Rule>>, part: &Part, wf: &[Rule<
         return match rule.target {
             "A" => part.x + part.m + part.a + part.s,
             "R" => 0,
-            x => apply_workflow(workflows, &part, workflows.get(x).unwrap()),
+            x => apply_workflow(workflows, part, workflows.get(x).unwrap()),
         };
     }
     return 0;
 }
 
 pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
-    let input: String = std::fs::read_to_string(&path)?.trim().parse()?;
+    let input: String = std::fs::read_to_string(path)?.trim().parse()?;
     let (rem, workflows) = parse_workflows(&input).unwrap();
-    let (_rem, parts) = parse_parts(&rem).unwrap();
+    let (_rem, parts) = parse_parts(rem).unwrap();
 
     let mut sum = 0;
     for part in parts {
@@ -192,7 +192,7 @@ fn apply_workflow_ranges(workflows: &HashMap<&str, Vec<Rule>>, pr: PartRange, wf
 }
 
 pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
-    let input: String = std::fs::read_to_string(&path)?.trim().parse()?;
+    let input: String = std::fs::read_to_string(path)?.trim().parse()?;
     let (_rem, workflows) = parse_workflows(&input).unwrap();
 
     let pr = PartRange {

@@ -35,18 +35,17 @@ fn parse_input(input: &str) -> Result<Vec<Race>, Box<dyn std::error::Error + '_>
 }
 
 pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
-    let input: String = std::fs::read_to_string(&path)?.parse()?;
+    let input: String = std::fs::read_to_string(path)?.parse()?;
     let races = parse_input(&input).unwrap();
     let mut res = 1;
     for race in races {
-        let mut success_tries = 0;
-        for hold in 0..=race.time {
-            let dist = (race.time - hold) * hold;
-            println!("Held {} moved for {}", hold, dist);
-            if dist > race.distance {
-                success_tries += 1;
+        let success_tries = (0..=race.time).fold(0, |s, hold| {
+            if (race.time - hold) * hold > race.distance {
+                s + 1
+            } else {
+                s
             }
-        }
+        });
         res *= success_tries;
     }
     println!("Mul of values: {:#?}", res);
@@ -73,8 +72,8 @@ fn parse_input_pt2(input: &str) -> Result<Race, Box<dyn std::error::Error + '_>>
 }
 
 pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
-    let input: String = std::fs::read_to_string(&path)?.parse()?;
-    let parsedinput: String = input.chars().filter(|&c| !(c == ' ')).collect();
+    let input: String = std::fs::read_to_string(path)?.parse()?;
+    let parsedinput: String = input.chars().filter(|&c| c != ' ').collect();
     let race = parse_input_pt2(&parsedinput).unwrap();
     let mut first_success = 0;
     for hold in 0..=race.time {

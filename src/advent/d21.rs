@@ -84,7 +84,7 @@ pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
 
     let mut solutions = Vec::new();
 
-    for steps in [rem, 1 * grid.len() + rem, 2 * grid.len() + rem] {
+    for steps in [rem, grid.len() + rem, 2 * grid.len() + rem] {
         let mut endpos = Vec::new();
         let mut visited = HashSet::new();
         take_step(&grid, 0, (startx, starty), &mut endpos, &mut visited, steps);

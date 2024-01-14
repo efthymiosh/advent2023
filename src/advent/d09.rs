@@ -10,55 +10,53 @@ fn parse_sequence(input: &str) -> IResult<&str, Vec<i64>> {
 }
 
 trait YieldPrediction {
-    fn yield_prediction(self: &mut Self);
-    fn yield_inverse(self: &mut Self);
+    fn yield_prediction(&mut self);
+    fn yield_inverse(&mut self);
 }
 
 impl YieldPrediction for Vec<i64> {
     fn yield_prediction(self: &mut Vec<i64>) {
         println!("Calculating  {:?}", self);
-        if self.iter().filter(|&x| *x != 0).collect::<Vec<&i64>>().len() == 0 {
+        if self.iter().filter(|&x| *x != 0).count() == 0 {
             self.push(0);
             return;
-        } else {
-            let mut diffvec: Vec<i64> = self
-                .iter()
-                .skip(1)
-                .scan(self[0], |s, e| {
-                    let ret = Some(*e - *s);
-                    *s = *e;
-                    ret
-                })
-                .collect();
-            diffvec.yield_prediction();
-            self.push(self[self.len() - 1] + diffvec[diffvec.len() - 1]);
-            println!("Yielded      {:?}", self);
         }
+        let mut diffvec: Vec<i64> = self
+            .iter()
+            .skip(1)
+            .scan(self[0], |s, e| {
+                let ret = Some(*e - *s);
+                *s = *e;
+                ret
+            })
+            .collect();
+        diffvec.yield_prediction();
+        self.push(self[self.len() - 1] + diffvec[diffvec.len() - 1]);
+        println!("Yielded      {:?}", self);
     }
     fn yield_inverse(self: &mut Vec<i64>) {
         println!("Calculating  {:?}", self);
-        if self.iter().filter(|&x| *x != 0).collect::<Vec<&i64>>().len() == 0 {
+        if self.iter().filter(|&x| *x != 0).count() == 0 {
             self.push(0);
             return;
-        } else {
-            let mut diffvec: Vec<i64> = self
-                .iter()
-                .skip(1)
-                .scan(self[0], |s, e| {
-                    let ret = Some(*s - *e);
-                    *s = *e;
-                    ret
-                })
-                .collect();
-            diffvec.yield_inverse();
-            self.push(self[self.len() - 1] - diffvec[diffvec.len() - 1]);
-            println!("Yielded      {:?}", self);
         }
+        let mut diffvec: Vec<i64> = self
+            .iter()
+            .skip(1)
+            .scan(self[0], |s, e| {
+                let ret = Some(*s - *e);
+                *s = *e;
+                ret
+            })
+            .collect();
+        diffvec.yield_inverse();
+        self.push(self[self.len() - 1] - diffvec[diffvec.len() - 1]);
+        println!("Yielded      {:?}", self);
     }
 }
 
 pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
-    let input: String = std::fs::read_to_string(&path)?.parse()?;
+    let input: String = std::fs::read_to_string(path)?.parse()?;
 
     let mut v: Vec<Vec<i64>> = Vec::new();
 
@@ -82,7 +80,7 @@ pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
-    let input: String = std::fs::read_to_string(&path)?.parse()?;
+    let input: String = std::fs::read_to_string(path)?.parse()?;
 
     let mut v: Vec<Vec<i64>> = Vec::new();
     let mut rem = input;

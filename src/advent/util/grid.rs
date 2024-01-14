@@ -29,7 +29,7 @@ where
 }
 
 #[allow(dead_code)]
-pub(crate) fn print_gridvec<T>(grid: &Vec<Vec<T>>, spacing: usize, dot: T)
+pub(crate) fn print_gridvec<T>(grid: &[Vec<T>], spacing: usize, dot: T)
 where
     T: Sized + Eq + PartialEq + std::fmt::Display,
 {

@@ -28,7 +28,7 @@ impl<T: PrimInt+Debug> Eq for Range<T> {}
 
 impl<T: PrimInt+Debug> PartialOrd for Range<T> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.start.partial_cmp(&other.start)
+        Some(self.start.cmp(&other.start))
     }
 }
 
@@ -40,11 +40,8 @@ impl<T: PrimInt+Debug> Ord for Range<T> {
 
 impl<T: PrimInt+Debug> Clone for Range<T> {
     fn clone(&self) -> Self {
-        Range {
-            start: self.start,
-            end: self.end,
-            transform: self.transform,
-        }
+        // Implements Copy
+        *self
     }
 }
 
@@ -64,7 +61,7 @@ impl<T: PrimInt+Debug+Display> Range<T> {
             transform,
         }
     }
-    fn transform(self: &Self, n: T) -> Option<T> {
+    fn transform(&self, n: T) -> Option<T> {
         if n >= self.start && n <= self.end {
             Some(n + self.transform)
         } else {
@@ -72,11 +69,11 @@ impl<T: PrimInt+Debug+Display> Range<T> {
         }
     }
     #[inline]
-    fn intersects(self: &Self, other: &Range<T>) -> bool {
+    fn intersects(&self, other: &Range<T>) -> bool {
         !(self.end <= other.start || other.end <= self.start)
     }
 
-    fn transform_from(self: Self, other: &Range<T>) -> (Vec<Range<T>>, Vec<Range<T>>) {
+    fn transform_from(self, other: &Range<T>) -> (Vec<Range<T>>, Vec<Range<T>>) {
         let mut v = Vec::new();
         let mut rem = Vec::new();
         if self.transform != T::zero() {
@@ -125,7 +122,7 @@ struct SeedMap {
 }
 
 impl SeedMap {
-    fn transform(self: &Self, n: i64) -> i64 {
+    fn transform(&self, n: i64) -> i64 {
         for r in &self.ranges {
             if let Some(t) = r.transform(n) {
                 return t;
@@ -134,14 +131,13 @@ impl SeedMap {
         n
     }
 
-    fn transform_range(self: &Self, range: Range<i64>) -> Vec<Range<i64>> {
+    fn transform_range(&self, range: Range<i64>) -> Vec<Range<i64>> {
         let mut v = Vec::new();
         let mut rem = vec![range];
         let intersecting_ranges: Vec<&Range<i64>> = self.ranges.iter().filter(|r| r.intersects(&range)).collect();
         for r in &intersecting_ranges {
             let mut newrem = Vec::new();
-            while !rem.is_empty() {
-                let tr = rem.pop().unwrap();
+            while let Some(tr) = rem.pop() {
                 let (mut vpass, mut vrem) = tr.transform_from(r);
                 v.append(&mut vpass);
                 newrem.append(&mut vrem);
@@ -200,7 +196,7 @@ fn parse_seedmap(input: &str) -> IResult<&str, (String, SeedMap)> {
 }
 
 pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
-    let input: String = std::fs::read_to_string(&path)?.trim().parse()?;
+    let input: String = std::fs::read_to_string(path)?.trim().parse()?;
     let mut seedmaps: HashMap<String, SeedMap> = HashMap::new();
 
     let (rem, seeds) = parse_seeds(&input).unwrap();
@@ -232,7 +228,7 @@ pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
-    let input: String = std::fs::read_to_string(&path)?.trim().parse()?;
+    let input: String = std::fs::read_to_string(path)?.trim().parse()?;
     let mut seedmaps: HashMap<String, SeedMap> = HashMap::new();
 
     let (rem, seedranges) = parse_seeds_pt2(&input).unwrap();

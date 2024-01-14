@@ -15,7 +15,7 @@ struct State {
 
 impl PartialOrd for State {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.cost.partial_cmp(&other.cost)
+        Some(self.cost.cmp(&other.cost))
     }
 }
 

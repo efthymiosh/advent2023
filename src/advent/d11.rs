@@ -16,12 +16,9 @@ pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
 
     for (i, line) in lines.enumerate() {
         for (j, c) in line.chars().enumerate() {
-            match c {
-                '#' => {
-                    grid[i][j] = next_planet;
-                    next_planet += 1;
-                },
-                _ => {},
+            if c == '#' {
+                grid[i][j] = next_planet;
+                next_planet += 1;
             }
             
         }
@@ -100,12 +97,9 @@ pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
 
     for (i, line) in lines.enumerate() {
         for (j, c) in line.chars().enumerate() {
-            match c {
-                '#' => {
-                    grid[i][j] = next_planet;
-                    next_planet += 1;
-                },
-                _ => {},
+            if c == '#' {
+                grid[i][j] = next_planet;
+                next_planet += 1;
             }
             
         }

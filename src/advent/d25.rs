@@ -13,7 +13,7 @@ struct Node {
     weight: u64,
 }
 
-fn parse_node<'a>(input: &'a str) -> IResult<&'a str, Node> {
+fn parse_node(input: &str) -> IResult<&str, Node> {
     let (rem, (id, neighbors)) =
         separated_pair(alpha1, tag(": "), separated_list1(tag(" "), alpha1))(input)?;
     Ok((
@@ -26,7 +26,7 @@ fn parse_node<'a>(input: &'a str) -> IResult<&'a str, Node> {
     ))
 }
 
-fn parse_input<'a>(input: &'a str) -> IResult<&'a str, HashMap<String, Node>> {
+fn parse_input(input: &str) -> IResult<&str, HashMap<String, Node>> {
     let (rem, nodes) = separated_list1(tag("\n"), parse_node)(input)?;
     let mut graph: HashMap<String, Node> =
         nodes.iter().map(|m| (m.id.clone(), m.clone())).collect();
@@ -69,7 +69,8 @@ fn get_graph_size(
         for n in &node.neighbors {
             if skip_edges.contains(&(&n, &node.id)) {
                 continue;
-            } else if skip_edges.contains(&(&node.id, &n)) {
+            }
+            if skip_edges.contains(&(&node.id, &n)) {
                 continue;
             }
             stack.push_back(graph.get(n).unwrap());
@@ -121,8 +122,7 @@ fn generate_furthest_node_weights(
     weights: &mut HashMap<(String, String), u64>,
 ) {
     let keys: Vec<&String> = graph.keys().collect();
-    for i in 0..keys.len() {
-        let startnode = keys[i];
+    for startnode in keys {
         let mut heap = VecDeque::new();
         let mut visited = HashSet::new();
 
@@ -144,9 +144,9 @@ fn generate_furthest_node_weights(
         for neigh in &graph[startnode].neighbors {
             let l = startnode.to_string();
             let r = neigh.to_string();
-            if let Some(_) = weights.get(&(l.to_string(), r.to_string())) {
+            if weights.get(&(l.to_string(), r.to_string())).is_some() {
                 weights.insert((l, r), max_cost);
-            } else if let Some(_) = weights.get(&(r.to_string(), l.to_string())) {
+            } else if weights.get(&(r.to_string(), l.to_string())).is_some() {
                 weights.insert((r, l), max_cost);
             } else {
                 println!("edge not found {} {}", l, r);
@@ -156,12 +156,12 @@ fn generate_furthest_node_weights(
 }
 
 pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
-    let input: String = std::fs::read_to_string(&path)?.trim().parse()?;
+    let input: String = std::fs::read_to_string(path)?.trim().parse()?;
     let (rem, mut graph) = parse_input(&input).unwrap();
     if !rem.is_empty() {
         panic!("Remaining input {}", rem);
     }
-    let initsize = get_graph_size(&graph, &mut BTreeSet::new());
+    let initsize = get_graph_size(&graph, &BTreeSet::new());
     println!("Initial graph size: {}", initsize);
     let mut weights: HashMap<(String, String), u64> = get_graph_edges(&graph);
     generate_furthest_node_weights(&mut graph, &mut weights);

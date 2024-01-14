@@ -17,14 +17,12 @@ struct Record {
 }
 
 impl Record {
-    fn map_permutations<'a>(map: &'a [char], counts: &[usize], countcur: usize, memo: &mut HashMap<(usize, usize, usize), u64>) -> u64 {
+    fn map_permutations(map: &[char], counts: &[usize], countcur: usize, memo: &mut HashMap<(usize, usize, usize), u64>) -> u64 {
         if let Some(&perms) = memo.get(&(map.len(), counts.len(), countcur)) {
             return perms;
         }
         if map.is_empty() {
-            if counts.is_empty() {
-                return 1;
-            } else if counts.len() == 1 && counts[0] == countcur {
+            if counts.is_empty() || (counts.len() == 1 && counts[0] == countcur) {
                 return 1;
             } else {
                 return 0;
@@ -34,27 +32,25 @@ impl Record {
         match map[0] {
             '.' => {
                 if countcur == 0 {
-                    permutations = Record::map_permutations(&map[1..], &counts, 0, memo);
+                    permutations = Record::map_permutations(&map[1..], counts, 0, memo);
+                } else if counts[0] == countcur {
+                    permutations = Record::map_permutations(&map[1..], &counts[1..], 0, memo);
                 } else {
-                    if counts[0] == countcur {
-                        permutations = Record::map_permutations(&map[1..], &counts[1..], 0, memo);
-                    } else {
-                        permutations = 0;
-                    }
+                    permutations = 0;
                 }
             }
             '#' => {
                 if counts.is_empty() {
                     return 0;
                 }
-                permutations = Record::map_permutations(&map[1..], &counts, countcur + 1, memo);
+                permutations = Record::map_permutations(&map[1..], counts, countcur + 1, memo);
             }
             '?' => {
                 if !counts.is_empty() {
-                    permutations = Record::map_permutations(&map[1..], &counts, countcur + 1, memo);
+                    permutations = Record::map_permutations(&map[1..], counts, countcur + 1, memo);
                 }
                 if countcur == 0 {
-                    permutations += Record::map_permutations(&map[1..], &counts, 0, memo);
+                    permutations += Record::map_permutations(&map[1..], counts, 0, memo);
                 } else if counts[0] == countcur {
                     permutations += Record::map_permutations(&map[1..], &counts[1..], 0, memo);
                 }
@@ -67,8 +63,8 @@ impl Record {
 
     fn permutations(&self) -> u64 {
         println!("{} {:?}", self.map.iter().collect::<String>(), self.counts);
-        let mut brok = self.counts.clone();
-        Record::map_permutations(&self.map[..], &mut brok[..], 0, &mut HashMap::new())
+        let brok = self.counts.clone();
+        Record::map_permutations(&self.map[..], &brok[..], 0, &mut HashMap::new())
     }
 }
 

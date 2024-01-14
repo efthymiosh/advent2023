@@ -6,9 +6,7 @@ const MARK: char = 'm';
 const EMPTY: char = '.';
 
 fn is_part(grid: &mut [&mut [char]], line: usize, mut start: usize, mut end: usize) -> bool {
-    if start != 0 {
-        start -= 1;
-    }
+    start = start.saturating_sub(1);
     if end != grid[line].len() - 1 {
         end += 1;
     }
@@ -44,7 +42,7 @@ pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
         for (j, c) in line.chars().enumerate() {
             grid[i][j] = match c {
                 '.' => EMPTY,
-                x if ('0'..='9').contains(&x) => x,
+                x if x.is_ascii_digit() => x,
                 _ => MARK,
             }
         }
@@ -120,7 +118,7 @@ pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
     for (i, line) in lines.enumerate() {
         for (j, c) in line.chars().enumerate() {
             grid[i+1][j+1] = match c {
-                x if ('0'..='9').contains(&x) => x,
+                x if x.is_ascii_digit() => x,
                 '*' => MARK,
                 _ => EMPTY,
             }

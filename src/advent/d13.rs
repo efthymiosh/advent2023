@@ -39,7 +39,7 @@ fn parse_maps(input: &str) -> IResult<&str, Vec<Grid>> {
     separated_list1(tag("\n\n"), parse_grid)(input)
 }
 
-fn find_horizon(vec: &Vec<u64>, smudges: u32) -> Option<usize> {
+fn find_horizon(vec: &[u64], smudges: u32) -> Option<usize> {
     let mut horizon = None;
     let mut griter = vec.iter().enumerate().peekable();
     while let Some((_, &num)) = griter.next() {
@@ -60,7 +60,7 @@ fn find_horizon(vec: &Vec<u64>, smudges: u32) -> Option<usize> {
 }
 
 pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
-    let input: String = std::fs::read_to_string(&path)?.trim().parse()?;
+    let input: String = std::fs::read_to_string(path)?.trim().parse()?;
 
     let (rem, grids) = parse_maps(&input).unwrap();
     if !rem.is_empty() {
@@ -79,7 +79,7 @@ pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
-    let input: String = std::fs::read_to_string(&path)?.trim().parse()?;
+    let input: String = std::fs::read_to_string(path)?.trim().parse()?;
 
     let (rem, grids) = parse_maps(&input).unwrap();
     if !rem.is_empty() {

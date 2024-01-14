@@ -28,7 +28,7 @@ fn parse_graph(input: &str) -> IResult<&str, Graph> {
 }
 
 pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
-    let input: String = std::fs::read_to_string(&path)?.trim().parse()?;
+    let input: String = std::fs::read_to_string(path)?.trim().parse()?;
 
     let (rem, directions) = parse_directions(&input).unwrap();
     let (rem, graph) = parse_graph(rem).unwrap();
@@ -63,7 +63,7 @@ pub fn pt1(path: String) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
-    let input: String = std::fs::read_to_string(&path)?.trim().parse()?;
+    let input: String = std::fs::read_to_string(path)?.trim().parse()?;
 
     let (rem, directions) = parse_directions(&input).unwrap();
     let (rem, graph) = parse_graph(rem).unwrap();
@@ -79,14 +79,14 @@ pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
         .map
         .keys()
         .filter(|s| s.ends_with('A'))
-        .map(|s| *s)
+        .copied()
         .collect();
     let mut offsets_to_z: Vec<usize> = Vec::new();
     for init in &posv {
         let mut pos = *init;
         let mut moves_to_z = Vec::new();
         for (idx, c) in directions.chars().cycle().enumerate() {
-            if pos.ends_with("Z") {
+            if pos.ends_with('Z') {
                 moves_to_z.push(idx);
                 if moves_to_z.len() == 3 {
                     let first = *moves_to_z.first().unwrap();

@@ -44,7 +44,7 @@ pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
             numstrings.iter().for_each(|(s, i)| {
                 if t.starts_with(s) {
                     last = Some(*i);
-                    if first == Option::None {
+                    if first.is_none() {
                         first = last;
                     }
                 }

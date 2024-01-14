@@ -12,7 +12,7 @@ struct Move {
     color: String,
 }
 
-fn parse_moves<'a>(input: &'a str) -> IResult<&'a str, Move> {
+fn parse_moves(input: &str) -> IResult<&str, Move> {
     let (remainder, ((dir, amt), colorstr)) = separated_pair(
         separated_pair(one_of("UDLR"), tag(" "), i64),
         tag(" "),
