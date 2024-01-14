@@ -5,7 +5,7 @@ use super::util;
 use nom::bytes::complete::tag;
 use nom::character::complete::u32;
 use nom::multi::{many1, separated_list0};
-use nom::sequence::{separated_pair, tuple};
+use nom::sequence::{delimited, separated_pair, tuple};
 use nom::IResult;
 
 #[derive(Debug)]
@@ -16,11 +16,16 @@ struct Card {
 }
 
 fn parse_card(input: &str) -> IResult<&str, Card> {
-    let (remainder, (_space, id)) = separated_pair(tag("Card"), many1(tag(" ")), u32)(input)?;
-    let (remainder, _) = tuple((tag(":"), many1(tag(" "))))(remainder)?;
-    let (remainder, v_win) = separated_list0(many1(tag(" ")), u32)(remainder)?;
-    let (remainder, _) = tuple((many1(tag(" ")), tag("|"), many1(tag(" "))))(remainder)?;
-    let (remainder, v_played) = separated_list0(many1(tag(" ")), u32)(remainder)?;
+    let (remainder, id) = delimited(
+        tuple((tag("Card"), many1(tag(" ")))),
+        u32,
+        tuple((tag(":"), many1(tag(" ")))),
+    )(input)?;
+    let (remainder, (v_win, v_played)) = separated_pair(
+        separated_list0(many1(tag(" ")), u32),
+        tuple((many1(tag(" ")), tag("|"), many1(tag(" ")))),
+        separated_list0(many1(tag(" ")), u32),
+    )(remainder)?;
 
     let winning: HashSet<u32> = v_win.into_iter().collect();
     let played: HashSet<u32> = v_played.into_iter().collect();
@@ -75,10 +80,8 @@ pub fn pt2(path: String) -> Result<(), Box<dyn std::error::Error>> {
         sum += copies;
         for _ in 0..copies {
             for j in (i + 1)..=(i + amount as u32) {
-                if let Some((amount,copies)) = hm.get(&j) {
+                if let Some((amount, copies)) = hm.get(&j) {
                     hm.insert(j, (*amount, *copies + 1));
-                } else {
-                    unreachable!();
                 }
             }
         }
